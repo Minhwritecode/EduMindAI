@@ -1,0 +1,30 @@
+{
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "PMDEduMind (Flutter)",
+            "request": "launch",
+            "type": "dart",
+            "program": "lib/main.dart",
+            "args": [
+                "--dart-define=GEMINI_API_KEY=${input:geminiKey}",
+                "--dart-define=API_BASE_URL=http://127.0.0.1:5000",
+                "--dart-define=APP_USER_ID=local"
+            ]
+        },
+        {
+            "type": "chrome",
+            "request": "launch",
+            "name": "Launch Chrome against localhost",
+            "url": "http://localhost:8080",
+            "webRoot": "${workspaceFolder}"
+        }
+    ],
+    "inputs": [
+        {
+            "id": "geminiKey",
+            "type": "promptString",
+            "description": "Gemini API key (not stored in repo)"
+        }
+    ]
+}
