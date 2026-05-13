@@ -18,6 +18,44 @@
 
 ---
 
+🚀 Tổng quan
+EduAI thích ứng với sở thích học tập của người dùng và tối ưu hóa trải nghiệm học tập của họ bằng cách sử dụng:
+
+Dự đoán phong cách học tập dựa trên học máy
+Giải quyết nghi ngờ bằng trí tuệ nhân tạo với GPT-2
+Đề xuất khóa học và tài liệu học tập cá nhân hóa
+Chế độ tập trung để theo dõi thời gian và phân tích năng suất.
+🔬 Mô hình học máy ứng dụng
+✅ 1. Công cụ dự đoán phong cách học tập
+Mô hình được sử dụng: Bộ phân loại Rừng ngẫu nhiên
+Mục tiêu: Phân loại người dùng vào một trong bốn phong cách học tập: Trực quan, Thính giác, Đọc/Viết, Vận động (VARK) .
+Bộ dữ liệu: Bộ dữ liệu phản hồi của người dùng với các mẫu hành vi học tập.
+Kết quả: Đạt độ chính xác 95% trong phân loại phong cách học tập.
+✅ 2. Hệ thống đề xuất thông minh
+Mô hình được sử dụng: Mô hình lai (TF-IDF, SVD, Mạng thần kinh)
+Mục tiêu: Đề xuất các khóa học và tài liệu học tập dựa trên:
+Sở thích môn học
+Mức độ khó
+Tương tác trong quá khứ
+Cách thức triển khai: Kết hợp lọc dựa trên nội dung và lọc cộng tác .
+✅ 3. Trợ giảng AI (Giải đáp thắc mắc)
+Mô hình được sử dụng: GPT-2 đã được tinh chỉnh (PyTorch)
+Mục tiêu: Cung cấp giải đáp thắc mắc tức thì, giải thích và hỗ trợ học tập tương tác .
+Dữ liệu huấn luyện: Bộ dữ liệu SQuAD v2 để tinh chỉnh Q&A.
+Triển khai:
+Tiền xử lý: Mã hóa bằng bộ mã hóa GPT-2.
+Tinh chỉnh: Huấn luyện dựa trên PyTorch trên Google Colab .
+Suy luận: Được triển khai dưới dạng API chatbot.
+Kết quả: Tạo ra các câu trả lời phù hợp với ngữ cảnh .
+✅ 4. Chế độ tập trung & Công cụ theo dõi năng suất
+Mô hình được sử dụng: Hồi quy Logistic và Phân tích chuỗi thời gian
+Mục tiêu: Giúp người dùng theo dõi thời gian học tập tập trung và phân tích xu hướng năng suất .
+Triển khai:
+Theo dõi thời gian với dữ liệu phiên người dùng
+Dự đoán thời gian học tập tối ưu
+Phân tích các mô hình tiêu điểm
+
+---
 ## Công nghệ
 
 | Lớp | Công nghệ |
