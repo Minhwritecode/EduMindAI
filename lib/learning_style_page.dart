@@ -2,8 +2,11 @@ import 'dart:convert';
 
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:provider/provider.dart';
 import 'package:smart_learning_application/const.dart';
 import 'package:smart_learning_application/learning_style_result_page.dart';
+import 'package:smart_learning_application/services/user_data_sync.dart';
+import 'package:smart_learning_application/state/notebook_context_state.dart';
 
 class QuizScreen extends StatefulWidget {
   const QuizScreen({super.key});
@@ -118,6 +121,19 @@ class _QuizScreenState extends State<QuizScreen> {
       }
       final map = jsonDecode(res.body) as Map<String, dynamic>;
       final style = map['learningStyle']?.toString() ?? 'Unknown';
+      final uid = context.read<NotebookContextState>().userId;
+      final syncErr = await UserDataSync.postQuizResult(
+        userId: uid,
+        quizType: 'vark',
+        learningStyle: style,
+        payload: Map<String, dynamic>.from(_payloadForModel()),
+      );
+      if (!mounted) return;
+      if (syncErr != null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Đã dự đoán; chưa lưu MongoDB: $syncErr')),
+        );
+      }
       await Navigator.push<void>(
         context,
         MaterialPageRoute<void>(
@@ -184,7 +200,7 @@ class _QuizScreenState extends State<QuizScreen> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage('https://i.pinimg.com/736x/ee/e1/d4/eee1d4114e36fa5f1dc7358c60f4b290.jpg'), // Replace with your network image URL
+            image: AssetImage(profileIconAsset),
             fit: BoxFit.cover,
           ),
         ),

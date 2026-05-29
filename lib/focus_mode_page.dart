@@ -1,5 +1,8 @@
 import 'dart:async';
+
 import 'package:flutter/material.dart';
+
+import 'const.dart' show profileIconAsset;
 
 class FocusModePage extends StatefulWidget {
   const FocusModePage({super.key});
@@ -46,8 +49,8 @@ class _FocusModePageState extends State<FocusModePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
-                Image.network(
-                  'https://saferschoolsni.co.uk/wp-content/uploads/2022/05/stressed-student-01-800x633.png',
+                Image.asset(
+                  profileIconAsset,
                   width: double.infinity,
                   height: 300,
                   fit: BoxFit.cover,

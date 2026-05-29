@@ -5,6 +5,8 @@ import 'package:dash_chat_2/dash_chat_2.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:smart_learning_application/const.dart'
+    show geminiGenerationModel, profileIconAsset;
 
 class AiTutorPage extends StatefulWidget {
   const AiTutorPage({super.key});
@@ -22,8 +24,6 @@ class _AiTutorPageState extends State<AiTutorPage> {
   ChatUser geminiUser = ChatUser(
     id: "1",
     firstName: "AI Tutor",
-    profileImage:
-    "https://cdn2.vectorstock.com/i/1000x1000/64/71/female-teacher-avatar-educacion-and-school-vector-38156471.jpg",
   );
 
   @override
@@ -44,8 +44,7 @@ class _AiTutorPageState extends State<AiTutorPage> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: NetworkImage(
-              "https://i.pinimg.com/736x/ee/e1/d4/eee1d4114e36fa5f1dc7358c60f4b290.jpg"),
+          image: AssetImage(profileIconAsset),
           fit: BoxFit.cover,
         ),
       ),
@@ -77,10 +76,13 @@ class _AiTutorPageState extends State<AiTutorPage> {
           File(chatMessage.medias!.first.url).readAsBytesSync(),
         ];
       }
-      gemini.streamGenerateContent(
-        question,
-        images: images,
-      ).listen((event) {
+      gemini
+          .streamGenerateContent(
+            question,
+            images: images,
+            modelName: geminiGenerationModel,
+          )
+          .listen((event) {
         ChatMessage? lastMessage = messages.firstOrNull;
         if (lastMessage != null && lastMessage.user == geminiUser) {
           lastMessage = messages.removeAt(0);

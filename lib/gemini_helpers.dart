@@ -6,16 +6,21 @@ import 'const.dart';
 
 /// Collects streamed Gemini output into a single string.
 Future<String> geminiCompleteText(String prompt) async {
-  if (geminiApiKeyIfConfigured.isEmpty) {
+  if (effectiveGeminiApiKey.isEmpty) {
     throw StateError(
-      'Thiếu GEMINI_API_KEY. Chạy: flutter run --dart-define=GEMINI_API_KEY=...',
+      'Thiếu GEMINI_API_KEY. Thêm vào file .env (cp .env.example .env) hoặc chạy: flutter run --dart-define=GEMINI_API_KEY=...',
     );
   }
   final gemini = Gemini.instance;
   final buffer = StringBuffer();
   final completer = Completer<String>();
   StreamSubscription<dynamic>? sub;
-  sub = gemini.streamGenerateContent(prompt).listen(
+  sub = gemini
+      .streamGenerateContent(
+        prompt,
+        modelName: geminiGenerationModel,
+      )
+      .listen(
     (event) {
       final parts = event.content?.parts;
       if (parts == null) return;

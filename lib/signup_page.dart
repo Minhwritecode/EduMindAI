@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
-import 'learning_style_page.dart';
+
+import 'const.dart' show profileIconAsset;
 import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -21,10 +22,10 @@ class _SignUpPageState extends State<SignUpPage> {
           Column(
             children: <Widget>[
               const SizedBox(height: 50), // Adjusted height to make space for the image
-              Image.network(
-                'https://th.bing.com/th/id/OIP.gxbf3PjJ-pvBzIytJb8TVAHaFS?rs=1&pid=ImgDetMain' ,// Replace with your network image URL
+              Image.asset(
+                profileIconAsset,
                 width: double.infinity,
-                height: 300, // Adjusted height for the image
+                height: 300,
                 fit: BoxFit.cover,
               ),
               Expanded(
@@ -127,9 +128,11 @@ class _SignUpPageState extends State<SignUpPage> {
                       const SizedBox(height: 20),
                       ElevatedButton(
                         onPressed: () {
-                          Navigator.push(
+                          Navigator.pushReplacement(
                             context,
-                            MaterialPageRoute(builder: (context) => QuizScreen()),
+                            MaterialPageRoute<void>(
+                              builder: (context) => const LoginPage(),
+                            ),
                           );
                         },
                         style: ElevatedButton.styleFrom(
@@ -155,7 +158,7 @@ class _SignUpPageState extends State<SignUpPage> {
                               onPressed: () {
                                 Navigator.push(
                                   context,
-                                  MaterialPageRoute(builder: (context) => LoginPage()),
+                                  MaterialPageRoute(builder: (context) => const LoginPage()),
                                 );
                               },
                               child: const Text(
@@ -179,13 +182,4 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: SignUpPage(),
-    routes: {
-      '/signup': (context) => SignUpPage(),
-    },
-  ));
 }

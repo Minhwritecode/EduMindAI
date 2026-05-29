@@ -1,10 +1,15 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'ai_tutor.dart';
+import 'const.dart' show profileIconAsset;
 import 'focus_mode_page.dart';
 import 'notebook_tool_screens.dart';
+import 'learning_style_page.dart';
 import 'schedule_analyze_page.dart';
 import 'services/notebook_mongo_sync.dart';
+import 'services/user_data_sync.dart';
 import 'state/notebook_context_state.dart';
 
 class HomePage extends StatefulWidget {
@@ -16,6 +21,7 @@ class HomePage extends StatefulWidget {
 
 class _HomePageState extends State<HomePage> {
   late final TextEditingController _notebookController;
+  Timer? _tasksSaveTimer;
 
   String? _selectedPreference; // Initialize as null to avoid the initial value error
 
@@ -27,10 +33,33 @@ class _HomePageState extends State<HomePage> {
     _notebookController.addListener(() {
       nb.setNotebookText(_notebookController.text);
     });
+    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTasksFromServer());
+  }
+
+  Future<void> _loadTasksFromServer() async {
+    final uid = context.read<NotebookContextState>().userId;
+    final pair = await UserDataSync.fetchTasks(uid);
+    if (!mounted) return;
+    if (pair.$2 != null) return;
+    final remote = pair.$1;
+    if (remote == null || remote.isEmpty) return;
+    setState(() {
+      tasks = List<String>.from(remote);
+    });
+  }
+
+  void _scheduleTasksPersistence() {
+    _tasksSaveTimer?.cancel();
+    _tasksSaveTimer = Timer(const Duration(milliseconds: 500), () async {
+      if (!mounted) return;
+      final uid = context.read<NotebookContextState>().userId;
+      await UserDataSync.pushTasks(uid, List<String>.from(tasks));
+    });
   }
 
   @override
   void dispose() {
+    _tasksSaveTimer?.cancel();
     _notebookController.dispose();
     super.dispose();
   }
@@ -48,14 +77,6 @@ class _HomePageState extends State<HomePage> {
     'Python Tutorial for Beginners | Learn Python in 1.5 Hours',
     'ApnaCollegeOfficial which Coding Platform should I study from?',
     'Web Development Tutorial for Beginners (2024 Edition)',
-  ];
-
-  List<String> videoImageUrls = [
-    'https://th.bing.com/th/id/OIP.0STrpvtmnpiN8MxYI-xUPwAAAA?rs=1&pid=ImgDetMain',
-    'https://www.codewithharry.com/_next/image/?url=https:%2F%2Fcwh-full-next-space.fra1.digitaloceanspaces.com%2Fvideoseries%2Fultimate-js-tutorial-hindi-1%2FJS-Thumb.jpg&w=828&q=75',
-    'https://th.bing.com/th/id/OIP.raiOFsxSpMFzOFwa2TXUmQAAAA?rs=1&pid=ImgDetMain',
-    'https://i.ytimg.com/vi/qTph1pj_rCo/maxresdefault.jpg',
-    'https://www.someurl.com/your-image4.jpg',
   ];
 
   int _selectedIndex = 0;
@@ -92,16 +113,19 @@ class _HomePageState extends State<HomePage> {
   List<String> tasks = [];
 
   void _addTask(String task) {
+    if (task.isEmpty) return;
     setState(() {
       tasks.add(task);
       _taskController.clear(); // Clear input field after adding task
     });
+    _scheduleTasksPersistence();
   }
 
   void _deleteTask(int index) {
     setState(() {
       tasks.removeAt(index);
     });
+    _scheduleTasksPersistence();
   }
 
   @override
@@ -145,6 +169,17 @@ class _HomePageState extends State<HomePage> {
                   ),
                 ],
               ),
+            ),
+            ListTile(
+              leading: const Icon(Icons.quiz_outlined),
+              title: const Text('Learning style (VARK)'),
+              onTap: () {
+                Navigator.pop(context);
+                Navigator.push(
+                  context,
+                  MaterialPageRoute<void>(builder: (context) => const QuizScreen()),
+                );
+              },
             ),
             ListTile(
               title: const Text('Settings'),
@@ -224,7 +259,6 @@ class _HomePageState extends State<HomePage> {
                   itemCount: videoTitles.length,
                   itemBuilder: (BuildContext context, int index) {
                     String videoTitle = videoTitles[index];
-                    String imageURL = videoImageUrls[index]; // Assuming you have a list of URLs
 
                     return Padding(
                       padding: const EdgeInsets.only(right: 10),
@@ -236,8 +270,8 @@ class _HomePageState extends State<HomePage> {
                             children: [
                               ClipRRect(
                                 borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                                child: Image.network(
-                                  imageURL, // Use the actual image URL here
+                                child: Image.asset(
+                                  profileIconAsset,
                                   width: 200,
                                   height: 120,
                                   fit: BoxFit.cover,

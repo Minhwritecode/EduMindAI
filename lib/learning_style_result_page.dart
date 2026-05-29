@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:smart_learning_application/const.dart' show profileIconAsset;
 import 'package:smart_learning_application/home_page_visual.dart';
 
 class LearningStyleResultPage extends StatelessWidget {
@@ -12,7 +13,7 @@ class LearningStyleResultPage extends StatelessWidget {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: NetworkImage('https://i.pinimg.com/736x/ee/e1/d4/eee1d4114e36fa5f1dc7358c60f4b290.jpg'), // Replace with your network image URL
+            image: AssetImage(profileIconAsset),
             fit: BoxFit.cover,
           ),
         ),
@@ -46,7 +47,7 @@ class LearningStyleResultPage extends StatelessWidget {
                   decoration: const BoxDecoration(
                     shape: BoxShape.circle,
                     image: DecorationImage(
-                      image: NetworkImage('https://cdni.iconscout.com/illustration/premium/thumb/group-study-4029949-3345550.png'), // Replace with your network image URL
+                      image: AssetImage(profileIconAsset),
                       fit: BoxFit.cover,
                     ),
                   ),
