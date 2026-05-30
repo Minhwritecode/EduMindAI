@@ -1,16 +1,25 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
+import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_learning_application/const.dart' show defaultUserId, geminiApiKeyIfConfigured;
+import 'package:smart_learning_application/const.dart' show defaultUserId;
 import 'package:smart_learning_application/splash_screen.dart';
 import 'learning_style_page.dart';
 import 'login_page.dart';
 import 'signup_page.dart';
 import 'state/notebook_context_state.dart';
 
-void main() {
-  if (geminiApiKeyIfConfigured.isNotEmpty) {
-    Gemini.init(apiKey: geminiApiKeyIfConfigured);
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  
+  try {
+    await dotenv.load(fileName: ".env");
+    final geminiApiKey = dotenv.env['GEMINI_API_KEY'];
+    if (geminiApiKey != null && geminiApiKey.isNotEmpty) {
+      Gemini.init(apiKey: geminiApiKey);
+    }
+  } catch (e) {
+    print('Error loading .env file: $e');
   }
   runApp(
     ChangeNotifierProvider(

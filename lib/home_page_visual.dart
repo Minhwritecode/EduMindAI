@@ -1,10 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'ai_tutor.dart';
 import 'focus_mode_page.dart';
-import 'notebook_tool_screens.dart';
+import 'my_learning_page.dart';
 import 'schedule_analyze_page.dart';
-import 'services/notebook_mongo_sync.dart';
 import 'state/notebook_context_state.dart';
 
 class HomePage extends StatefulWidget {
@@ -15,23 +13,10 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  late final TextEditingController _notebookController;
-
-  String? _selectedPreference; // Initialize as null to avoid the initial value error
-
-  @override
-  void initState() {
-    super.initState();
-    final nb = context.read<NotebookContextState>();
-    _notebookController = TextEditingController(text: nb.notebookText);
-    _notebookController.addListener(() {
-      nb.setNotebookText(_notebookController.text);
-    });
-  }
+  String? _selectedPreference;
 
   @override
   void dispose() {
-    _notebookController.dispose();
     super.dispose();
   }
 
@@ -69,13 +54,21 @@ class _HomePageState extends State<HomePage> {
       // Navigate to Home (current page)
         break;
       case 1:
-      // Navigate to My Learning
-      // Example: Navigator.push(context, MaterialPageRoute(builder: (context) => MyLearningPage()));
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const MyLearningPage()),
+        );
         break;
       case 2:
         Navigator.push(
           context,
-          MaterialPageRoute(builder: (context) => const AiTutorPage()),
+          MaterialPageRoute(builder: (context) => const ScheduleAnalyzePage()),
+        );
+        break;
+      case 3:
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (context) => const FocusModePage()),
         );
         break;
     }
@@ -168,8 +161,6 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              _buildNotebookWorkspaceCard(context),
-              const SizedBox(height: 16),
               Row(
                 children: [
                   const Expanded(
@@ -339,6 +330,7 @@ class _HomePageState extends State<HomePage> {
           onTap: _onItemTapped,
           selectedItemColor: Colors.white, // Color of selected item's icon and text
           unselectedItemColor: Colors.white.withOpacity(0.6), // Color of unselected item's icon and text
+          type: BottomNavigationBarType.fixed, // Fixes white background issue when adding more than 3 items
           items: const <BottomNavigationBarItem>[
             BottomNavigationBarItem(
               icon: Icon(Icons.home),
@@ -349,130 +341,20 @@ class _HomePageState extends State<HomePage> {
               label: 'My Learning',
             ),
             BottomNavigationBarItem(
-              icon: Icon(Icons.school),
-              label: 'AI Tutor',
+              icon: Icon(Icons.calendar_today),
+              label: 'My schedule',
+            ),
+            BottomNavigationBarItem(
+              icon: Icon(Icons.timer),
+              label: 'Pomodoro',
             ),
           ],
         ),
-      ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: _navigateToFocusMode,
-        backgroundColor: const Color(0xFF48A9A6), // Change the background color of the floating action button
-        tooltip: 'Focus Mode',
-        child: const Icon(Icons.timer, color: Colors.white), // Change the color of the icon
       ),
     );
   }
 
-  Widget _buildNotebookWorkspaceCard(BuildContext context) {
-    return Card(
-      elevation: 2,
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-      child: Padding(
-        padding: const EdgeInsets.all(12),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            Row(
-              children: [
-                const Icon(Icons.menu_book_outlined, color: Color(0xFF48A9A6)),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Notebook (nguồn cho AI)',
-                    style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFF002131)),
-                  ),
-                ),
-                IconButton(
-                  tooltip: 'Đẩy lên MongoDB',
-                  onPressed: () async {
-                    final nb = context.read<NotebookContextState>();
-                    final err = await NotebookMongoSync.pushContext(nb.userId, nb.notebookText);
-                    if (!context.mounted) return;
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(content: Text(err ?? 'Đã lưu ngữ cảnh lên server.')),
-                    );
-                  },
-                  icon: const Icon(Icons.cloud_upload_outlined),
-                ),
-                IconButton(
-                  tooltip: 'Tải từ MongoDB',
-                  onPressed: () async {
-                    final nb = context.read<NotebookContextState>();
-                    final pair = await NotebookMongoSync.fetchContext(nb.userId);
-                    final err = pair.$2;
-                    if (!context.mounted) return;
-                    if (err != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(err)));
-                      return;
-                    }
-                    final remote = pair.$1 ?? '';
-                    nb.setNotebookText(remote);
-                    setState(() {
-                      _notebookController.value = TextEditingValue(
-                        text: remote,
-                        selection: TextSelection.collapsed(offset: remote.length),
-                      );
-                    });
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      const SnackBar(content: Text('Đã tải ngữ cảnh từ server.')),
-                    );
-                  },
-                  icon: const Icon(Icons.cloud_download_outlined),
-                ),
-              ],
-            ),
-            const Text(
-              'Dán tài liệu hoặc ghi chú — Mindmap, Quiz, Flashcard, Slide Desk, Report dùng nội dung này trong prompt.',
-              style: TextStyle(fontSize: 13, color: Colors.black54),
-            ),
-            const SizedBox(height: 10),
-            TextField(
-              controller: _notebookController,
-              minLines: 4,
-              maxLines: 8,
-              decoration: const InputDecoration(
-                border: OutlineInputBorder(),
-                hintText: 'Ví dụ: tóm tắt bài, đoạn PDF, câu hỏi ôn tập…',
-              ),
-            ),
-            const SizedBox(height: 14),
-            const Text('Công cụ', style: TextStyle(fontWeight: FontWeight.w600)),
-            const SizedBox(height: 8),
-            Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                for (final t in NotebookTool.values)
-                  ActionChip(
-                    avatar: Icon(t.icon, size: 18),
-                    label: Text(t.title),
-                    onPressed: () {
-                      Navigator.of(context).push(
-                        MaterialPageRoute<void>(
-                          builder: (_) => NotebookToolScreen(tool: t),
-                        ),
-                      );
-                    },
-                  ),
-                ActionChip(
-                  avatar: const Icon(Icons.calendar_month_outlined, size: 18),
-                  label: const Text('Phân tích lịch'),
-                  onPressed: () {
-                    Navigator.of(context).push(
-                      MaterialPageRoute<void>(
-                        builder: (_) => const ScheduleAnalyzePage(),
-                      ),
-                    );
-                  },
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
+
 
   Widget _buildSubjectCard(String subjectName, int index) {
     return Padding(

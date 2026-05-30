@@ -71,42 +71,52 @@ def health():
     )
 
 
-@app.route("/api/notebook-context", methods=["POST"])
-def save_notebook_context():
-    """Upsert notebook text for a user (Flutter Notebook panel)."""
+@app.route("/api/notebooks", methods=["GET"])
+def get_notebooks():
     if mongo_db is None:
-        return jsonify(
-            {"ok": False, "error": "MongoDB not configured. Set MONGO_URI in .env"}
-        ), 503
+        return jsonify({"ok": False, "error": "MongoDB not configured"}), 503
+    user_id = request.args.get("userId", "local")
+    docs = list(mongo_db["notebooks"].find({"userId": user_id}, projection={"_id": 0}))
+    return jsonify({"ok": True, "notebooks": docs}), 200
+
+
+@app.route("/api/notebooks", methods=["POST"])
+def save_notebook():
+    if mongo_db is None:
+        return jsonify({"ok": False, "error": "MongoDB not configured"}), 503
     data = request.get_json(silent=True) or {}
     user_id = str(data.get("userId", "local"))
+    notebook_id = str(data.get("id", ""))
+    title = str(data.get("title", "Untitled Notebook"))
     text = str(data.get("text", ""))
-    mongo_db["notebook_contexts"].update_one(
-        {"userId": user_id},
+    if not notebook_id:
+        import uuid
+        notebook_id = str(uuid.uuid4())
+    
+    mongo_db["notebooks"].update_one(
+        {"userId": user_id, "id": notebook_id},
         {
             "$set": {
                 "userId": user_id,
+                "id": notebook_id,
+                "title": title,
                 "text": text,
                 "updatedAt": datetime.now(timezone.utc),
             }
         },
         upsert=True,
     )
-    return jsonify({"ok": True}), 200
+    return jsonify({"ok": True, "id": notebook_id}), 200
 
 
-@app.route("/api/notebook-context", methods=["GET"])
-def get_notebook_context():
+@app.route("/api/notebooks", methods=["DELETE"])
+def delete_notebook():
     if mongo_db is None:
-        return jsonify(
-            {"ok": False, "error": "MongoDB not configured. Set MONGO_URI in .env"}
-        ), 503
+        return jsonify({"ok": False, "error": "MongoDB not configured"}), 503
     user_id = request.args.get("userId", "local")
-    doc = mongo_db["notebook_contexts"].find_one(
-        {"userId": user_id}, projection={"_id": 0, "text": 1}
-    )
-    text = (doc or {}).get("text", "")
-    return jsonify({"ok": True, "text": text}), 200
+    notebook_id = request.args.get("id", "")
+    mongo_db["notebooks"].delete_one({"userId": user_id, "id": notebook_id})
+    return jsonify({"ok": True}), 200
 
 
 if __name__ == '__main__':

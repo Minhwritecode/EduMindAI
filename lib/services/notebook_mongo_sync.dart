@@ -1,39 +1,79 @@
-import 'dart:convert';
+import 'dart:async';
 
-import 'package:http/http.dart' as http;
+class Notebook {
+  final String id;
+  final String title;
+  final String text;
 
-import '../const.dart';
+  Notebook({required this.id, required this.title, required this.text});
 
-/// Sync notebook text with Flask + MongoDB (`/api/notebook-context`).
+  factory Notebook.fromJson(Map<String, dynamic> json) {
+    return Notebook(
+      id: json['id'] ?? '',
+      title: json['title'] ?? 'Untitled Notebook',
+      text: json['text'] ?? '',
+    );
+  }
+
+  Map<String, dynamic> toJson() {
+    return {
+      'id': id,
+      'title': title,
+      'text': text,
+    };
+  }
+}
+
+/// A mocked version of NotebookMongoSync for demo purposes without a backend.
 class NotebookMongoSync {
-  static Uri _uri(String path, [Map<String, String>? query]) {
-    final base = apiBaseUrl.endsWith('/') ? apiBaseUrl.substring(0, apiBaseUrl.length - 1) : apiBaseUrl;
-    return Uri.parse('$base$path').replace(queryParameters: query);
+  // In-memory static list to persist data while the app is running
+  static final List<Notebook> _demoNotebooks = [
+    Notebook(
+      id: 'demo_1', 
+      title: 'Welcome Notebook', 
+      text: 'This is a demo notebook! You can edit this text, save it, and then switch to the AI Chat tab to ask questions about it. \n\nSince the backend is not connected, this data is saved in memory and will reset if you fully restart the app.'
+    )
+  ];
+
+  static Future<(List<Notebook>?, String?)> fetchNotebooks(String userId) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    // Return a copy of the list
+    return (_demoNotebooks.toList(), null);
   }
 
-  static Future<String?> pushContext(String userId, String text) async {
-    try {
-      final res = await http.post(
-        _uri('/api/notebook-context'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({'userId': userId, 'text': text}),
-      );
-      if (res.statusCode >= 200 && res.statusCode < 300) return null;
-      return 'HTTP ${res.statusCode}: ${res.body}';
-    } catch (e) {
-      return e.toString();
+  static Future<(String?, String?)> saveNotebook({
+    required String userId, 
+    required String id, 
+    required String title, 
+    required String text
+  }) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    
+    if (id.isEmpty) {
+      // Create a new notebook
+      final newId = DateTime.now().millisecondsSinceEpoch.toString();
+      _demoNotebooks.add(Notebook(id: newId, title: title, text: text));
+      return (newId, null);
+    } else {
+      // Update an existing notebook
+      final index = _demoNotebooks.indexWhere((n) => n.id == id);
+      if (index >= 0) {
+        _demoNotebooks[index] = Notebook(id: id, title: title, text: text);
+        return (id, null);
+      } else {
+        // If it was somehow deleted but they try to save, just add it back
+        _demoNotebooks.add(Notebook(id: id, title: title, text: text));
+        return (id, null);
+      }
     }
   }
 
-  static Future<(String?, String?)> fetchContext(String userId) async {
-    try {
-      final res = await http.get(_uri('/api/notebook-context', {'userId': userId}));
-      if (res.statusCode != 200) return (null, 'HTTP ${res.statusCode}: ${res.body}');
-      final map = jsonDecode(res.body) as Map<String, dynamic>;
-      final text = map['text'] as String? ?? '';
-      return (text, null);
-    } catch (e) {
-      return (null, e.toString());
-    }
+  static Future<String?> deleteNotebook(String userId, String notebookId) async {
+    // Simulate network delay
+    await Future.delayed(const Duration(milliseconds: 500));
+    _demoNotebooks.removeWhere((n) => n.id == notebookId);
+    return null;
   }
 }

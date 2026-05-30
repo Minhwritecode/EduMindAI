@@ -1,6 +1,8 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 
+enum TimerMode { focus, shortBreak, longBreak }
+
 class FocusModePage extends StatefulWidget {
   const FocusModePage({super.key});
 
@@ -9,143 +11,222 @@ class FocusModePage extends StatefulWidget {
 }
 
 class _FocusModePageState extends State<FocusModePage> {
-  final Stopwatch _stopwatch = Stopwatch();
+  static const int focusDuration = 25 * 60;
+  static const int shortBreakDuration = 5 * 60;
+  static const int longBreakDuration = 15 * 60;
+
+  TimerMode _currentMode = TimerMode.focus;
+  int _remainingSeconds = focusDuration;
+  bool _isRunning = false;
   Timer? _timer;
 
   @override
-  void initState() {
-    super.initState();
-    _startTimer();
+  void dispose() {
+    _timer?.cancel();
+    super.dispose();
   }
 
-  void _startTimer() {
-    _stopwatch.start();
-    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
-      setState(() {}); // Update UI every second
-    });
-  }
-
-  void _stopTimer() {
-    _stopwatch.stop();
-    if (_timer != null) {
-      _timer!.cancel();
+  int _getDurationForMode(TimerMode mode) {
+    switch (mode) {
+      case TimerMode.focus:
+        return focusDuration;
+      case TimerMode.shortBreak:
+        return shortBreakDuration;
+      case TimerMode.longBreak:
+        return longBreakDuration;
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      /*appBar: AppBar(
-        title: Text('Focus Mode'),
-        backgroundColor: Color(0xFF48A9A6),
-      ),*/
-      body: Stack(
-        children: [
-          Positioned.fill(
-            top: AppBar().preferredSize.height - 60, // Adjusted to reduce the distance
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                Image.network(
-                  'https://saferschoolsni.co.uk/wp-content/uploads/2022/05/stressed-student-01-800x633.png',
-                  width: double.infinity,
-                  height: 300,
-                  fit: BoxFit.cover,
-                ),
-                Expanded(
-                  child: Container(
-                    decoration: const BoxDecoration(
-                      color: Color(0xFFECE6E6),
-                      borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(50),
-                        topRight: Radius.circular(50),
-                      ),
-                    ),
-                    child: Padding(
-                      padding: const EdgeInsets.all(20.0),
-                      child: Column(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const Text(
-                            'Start studying without any disturbance\nEnable it to enhance your concentration',
-                            textAlign: TextAlign.center,
-                            style: TextStyle(fontSize: 20, color: Color(0xFF531002)),
-                          ),
-                          const SizedBox(height: 20),
-                          Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              Container(
-                                width: 150,
-                                height: 150,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: Colors.blue.shade400, width: 4),
-                                ),
-                                child: CircularProgressIndicator(
-                                  value: _stopwatch.elapsed.inSeconds / 1800, // Example: 30 minutes study session
-                                  backgroundColor: Colors.grey,
-                                  valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF531002)),
-                                ),
-                              ),
-                              Text(
-                                '${_stopwatch.elapsed.inMinutes}:${(_stopwatch.elapsed.inSeconds.remainder(60)).toString().padLeft(2, '0')}',
-                                style: const TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 20),
-                          ElevatedButton.icon(
-                            onPressed: _stopTimer,
-                            icon: const Icon(Icons.stop),
-                            label: const Text('End Focus Mode'),
-                            style: ElevatedButton.styleFrom(
-                              foregroundColor: Colors.white,
-                              backgroundColor: const Color(0xFF48A9A6),
-                              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 12),
-                              shape: RoundedRectangleBorder(
-                                borderRadius: BorderRadius.circular(30),
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 20),
-                          Visibility(
-                            visible: _stopwatch.elapsed.inMinutes >= 30,
-                            child: const Text(
-                              'Great job! You have completed your focus session.',
-                              style: TextStyle(fontSize: 18, color: Colors.green),
-                              textAlign: TextAlign.center,
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
+  void _setMode(TimerMode mode) {
+    _timer?.cancel();
+    setState(() {
+      _currentMode = mode;
+      _remainingSeconds = _getDurationForMode(mode);
+      _isRunning = false;
+    });
+  }
+
+  void _startTimer() {
+    if (_isRunning) return;
+    setState(() {
+      _isRunning = true;
+    });
+    _timer = Timer.periodic(const Duration(seconds: 1), (timer) {
+      setState(() {
+        if (_remainingSeconds > 0) {
+          _remainingSeconds--;
+        } else {
+          _timer?.cancel();
+          _isRunning = false;
+          _showCompletionDialog();
+        }
+      });
+    });
+  }
+
+  void _pauseTimer() {
+    _timer?.cancel();
+    setState(() {
+      _isRunning = false;
+    });
+  }
+
+  void _resetTimer() {
+    _timer?.cancel();
+    setState(() {
+      _remainingSeconds = _getDurationForMode(_currentMode);
+      _isRunning = false;
+    });
+  }
+
+  void _showCompletionDialog() {
+    String message = _currentMode == TimerMode.focus
+        ? "Focus session complete! Take a break."
+        : "Break is over! Time to focus.";
+        
+    showDialog(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Time's up!"),
+        content: Text(message),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text("OK", style: TextStyle(color: Color(0xFF48A9A6))),
           ),
         ],
       ),
     );
   }
 
-  @override
-  void dispose() {
-    _stopwatch.stop();
-    if (_timer != null) {
-      _timer!.cancel();
-    }
-    super.dispose();
+  String _formatTime(int seconds) {
+    int minutes = seconds ~/ 60;
+    int remainingSeconds = seconds % 60;
+    return '${minutes.toString().padLeft(2, '0')}:${remainingSeconds.toString().padLeft(2, '0')}';
   }
-}
 
-void main() {
-  runApp(MaterialApp(
-    home: FocusModePage(),
-    routes: {
-      '/focusmode': (context) => FocusModePage(),
-    },
-  ));
+  Widget _buildModeButton(String text, TimerMode mode) {
+    bool isSelected = _currentMode == mode;
+    return GestureDetector(
+      onTap: () => _setMode(mode),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        decoration: BoxDecoration(
+          color: isSelected ? const Color(0xFF48A9A6) : Colors.transparent,
+          borderRadius: BorderRadius.circular(20),
+        ),
+        child: Text(
+          text,
+          style: TextStyle(
+            color: isSelected ? Colors.white : Colors.grey.shade700,
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+      ),
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    double progress = _remainingSeconds / _getDurationForMode(_currentMode);
+
+    return Scaffold(
+      backgroundColor: const Color(0xFFF7F8FA),
+      appBar: AppBar(
+        title: const Text('Pomodoro', style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color(0xFF48A9A6),
+        elevation: 0,
+        iconTheme: const IconThemeData(color: Colors.white),
+      ),
+      body: Center(
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            // Mode Selectors
+            Container(
+              padding: const EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: Colors.grey.shade200,
+                borderRadius: BorderRadius.circular(25),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _buildModeButton("Focus", TimerMode.focus),
+                  _buildModeButton("Short Break", TimerMode.shortBreak),
+                  _buildModeButton("Long Break", TimerMode.longBreak),
+                ],
+              ),
+            ),
+            const SizedBox(height: 60),
+
+            // Timer Display
+            Stack(
+              alignment: Alignment.center,
+              children: [
+                SizedBox(
+                  width: 250,
+                  height: 250,
+                  child: CircularProgressIndicator(
+                    value: progress,
+                    strokeWidth: 12,
+                    backgroundColor: Colors.grey.shade300,
+                    valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF48A9A6)),
+                  ),
+                ),
+                Text(
+                  _formatTime(_remainingSeconds),
+                  style: const TextStyle(
+                    fontSize: 60,
+                    fontWeight: FontWeight.w300,
+                    color: Color(0xFF002131),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 60),
+
+            // Controls
+            Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                if (!_isRunning)
+                  ElevatedButton(
+                    onPressed: _startTimer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: const Color(0xFF48A9A6),
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: const Text('START', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
+                  )
+                else
+                  ElevatedButton(
+                    onPressed: _pauseTimer,
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: Colors.orange.shade400,
+                      foregroundColor: Colors.white,
+                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                    ),
+                    child: const Text('PAUSE', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
+                  ),
+                const SizedBox(width: 20),
+                IconButton(
+                  onPressed: _resetTimer,
+                  icon: const Icon(Icons.refresh),
+                  color: Colors.grey.shade600,
+                  iconSize: 32,
+                  tooltip: 'Reset Timer',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
 }
