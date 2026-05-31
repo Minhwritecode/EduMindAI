@@ -1,6 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Ensure this import points to your home page file
+import 'package:provider/provider.dart';
+import 'login_page.dart';
+import 'home_page_visual.dart';
+import 'services/auth_service.dart';
+import 'state/notebook_context_state.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -15,13 +19,25 @@ class _SplashScreenState extends State<SplashScreen> {
   @override
   void initState() {
     super.initState();
-    _timer = Timer(const Duration(seconds: 3), () {
+    _checkAuthAndNavigate();
+  }
+
+  void _checkAuthAndNavigate() async {
+    final userId = await AuthService.getSavedUserId();
+    
+    _timer = Timer(const Duration(seconds: 2), () {
       if (!mounted) return;
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(
-          builder: (context) => LoginPage(),
-        ),
-      );
+      
+      if (userId != null && userId.isNotEmpty) {
+        context.read<NotebookContextState>().userId = userId;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const HomePage()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (context) => const LoginPage()),
+        );
+      }
     });
   }
 

@@ -1,17 +1,53 @@
 import 'package:flutter/material.dart';
-import 'learning_style_page.dart';
+import 'package:provider/provider.dart';
+import 'home_page_visual.dart';
 import 'login_page.dart';
+import 'services/auth_service.dart';
+import 'state/notebook_context_state.dart';
 
 class SignUpPage extends StatefulWidget {
   const SignUpPage({super.key});
 
   @override
-  _SignUpPageState createState() => _SignUpPageState();
+  State<SignUpPage> createState() => _SignUpPageState();
 }
 
 class _SignUpPageState extends State<SignUpPage> {
+  final TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _emailController = TextEditingController();
+  final TextEditingController _passwordController = TextEditingController();
+  
   String? _selectedInterest;
   final List<String> _interests = ['Science', 'Math', 'History', 'Literature', 'Art', 'Technology', 'Sports'];
+  bool _isLoading = false;
+
+  void _signup() async {
+    final username = _usernameController.text.trim();
+    final email = _emailController.text.trim();
+    final password = _passwordController.text;
+    final interest = _selectedInterest ?? '';
+
+    if (username.isEmpty || email.isEmpty || password.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(content: Text('Please fill all fields')));
+      return;
+    }
+
+    setState(() => _isLoading = true);
+    
+    final result = await AuthService.register(username, email, password, interest);
+    
+    if (!mounted) return;
+    setState(() => _isLoading = false);
+
+    if (result.ok && result.userId != null) {
+      context.read<NotebookContextState>().userId = result.userId!;
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute<void>(builder: (context) => const HomePage()),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(result.error ?? 'Signup failed')));
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -20,22 +56,20 @@ class _SignUpPageState extends State<SignUpPage> {
         children: <Widget>[
           Column(
             children: <Widget>[
-              const SizedBox(height: 50), // Adjusted height to make space for the image
+              const SizedBox(height: 50),
               Image.network(
-                'https://th.bing.com/th/id/OIP.gxbf3PjJ-pvBzIytJb8TVAHaFS?rs=1&pid=ImgDetMain' ,// Replace with your network image URL
+                'https://th.bing.com/th/id/OIP.gxbf3PjJ-pvBzIytJb8TVAHaFS?rs=1&pid=ImgDetMain',
                 width: double.infinity,
-                height: 300, // Adjusted height for the image
+                height: 300,
                 fit: BoxFit.cover,
               ),
-              Expanded(
-                child: Container(),
-              ),
+              Expanded(child: Container()),
             ],
           ),
           Align(
             alignment: Alignment.bottomCenter,
             child: Container(
-              height: MediaQuery.of(context).size.height * 0.65, // Adjusted height to make the rectangle smaller
+              height: MediaQuery.of(context).size.height * 0.65,
               decoration: const BoxDecoration(
                 color: Color(0xFFECE6E6),
                 borderRadius: BorderRadius.only(
@@ -61,10 +95,11 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 20),
                       TextField(
+                        controller: _usernameController,
                         decoration: InputDecoration(
                           hintText: 'Username',
-                          hintStyle: const TextStyle(color: Color(0xFF531002)), // Changed the color of the hint text
-                          fillColor: Colors.white, // Changed the color of the text field to white
+                          hintStyle: const TextStyle(color: Color(0xFF531002)),
+                          fillColor: Colors.white,
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -74,10 +109,11 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        controller: _emailController,
                         decoration: InputDecoration(
                           hintText: 'Email Address',
-                          hintStyle: const TextStyle(color: Color(0xFF531002)), // Changed the color of the hint text
-                          fillColor: Colors.white, // Changed the color of the text field to white
+                          hintStyle: const TextStyle(color: Color(0xFF531002)),
+                          fillColor: Colors.white,
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -89,8 +125,8 @@ class _SignUpPageState extends State<SignUpPage> {
                       DropdownButtonFormField<String>(
                         decoration: InputDecoration(
                           hintText: 'Field of Interest',
-                          hintStyle: const TextStyle(color: Color(0xFF531002)), // Changed the color of the hint text
-                          fillColor: Colors.white, // Changed the color of the text field to white
+                          hintStyle: const TextStyle(color: Color(0xFF531002)),
+                          fillColor: Colors.white,
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -112,11 +148,12 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 10),
                       TextField(
+                        controller: _passwordController,
                         obscureText: true,
                         decoration: InputDecoration(
                           hintText: 'Password',
-                          hintStyle: const TextStyle(color: Color(0xFF531002)), // Changed the color of the hint text
-                          fillColor: Colors.white, // Changed the color of the text field to white
+                          hintStyle: const TextStyle(color: Color(0xFF531002)),
+                          fillColor: Colors.white,
                           filled: true,
                           border: OutlineInputBorder(
                             borderRadius: BorderRadius.circular(30),
@@ -126,24 +163,20 @@ class _SignUpPageState extends State<SignUpPage> {
                       ),
                       const SizedBox(height: 20),
                       ElevatedButton(
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(builder: (context) => QuizScreen()),
-                          );
-                        },
+                        onPressed: _isLoading ? null : _signup,
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFF48A9A6), // Changed the color of the sign up button
+                          backgroundColor: const Color(0xFF48A9A6),
                           shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(30),
                           ),
                           padding: const EdgeInsets.symmetric(vertical: 15),
                         ),
-                        child: const Text(
-                          'SIGN UP',
-                          style: TextStyle(fontSize: 18, color: Colors.white),
-                          // Changed the color of the 'SIGN UP' text to white
-                        ),
+                        child: _isLoading 
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              'SIGN UP',
+                              style: TextStyle(fontSize: 18, color: Colors.white),
+                            ),
                       ),
                       const SizedBox(height: 10),
                       Center(
@@ -153,9 +186,9 @@ class _SignUpPageState extends State<SignUpPage> {
                             const Text('Already have an account?'),
                             TextButton(
                               onPressed: () {
-                                Navigator.push(
+                                Navigator.pushReplacement(
                                   context,
-                                  MaterialPageRoute(builder: (context) => LoginPage()),
+                                  MaterialPageRoute(builder: (context) => const LoginPage()),
                                 );
                               },
                               child: const Text(
@@ -179,13 +212,4 @@ class _SignUpPageState extends State<SignUpPage> {
       ),
     );
   }
-}
-
-void main() {
-  runApp(MaterialApp(
-    home: SignUpPage(),
-    routes: {
-      '/signup': (context) => SignUpPage(),
-    },
-  ));
 }
