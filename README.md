@@ -1,139 +1,104 @@
-# PMDEduMind
+# PMDEduMind (EduMindAI)
 
-Ứng dụng học tập trên **Flutter**, kết hợp **Google Gemini** (gia sư, công cụ theo ngữ cảnh), **Python Flask** (dự đoán phong cách học VARK bằng Random Forest), và tùy chọn **MongoDB** để lưu ghi chú workspace.
+EduMindAI is a smart, context-grounded learning ecosystem built with **Flutter**, a **FastAPI** Python backend, **MongoDB** for persistent storage, and the **Google Gemini API** for AI-driven study asset generation.
 
-**Mã nguồn:** [github.com/Minhwritecode/EduMindAI](https://github.com/Minhwritecode/EduMindAI)
-
----
-
-## PMDEduMind làm gì
-
-- **Dashboard:** ô **Notebook** — dán tài liệu, outline, câu hỏi; mọi công cụ AI bên dưới đọc nội dung này làm ngữ cảnh.
-- **Workspace:** Mindmap, Pomodoro, Quiz, Flashcard, Slide Desk, Report — sinh nội dung phù hợp với Notebook (Gemini).
-- **Phân tích lịch:** nhập lịch bận/rảnh và mục tiêu học → gợi ý khung giờ cụ thể (Gemini).
-- **Quiz phong cách học (VARK):** 10 câu hỏi → Flask `predictLearningStyle` (Random Forest, dữ liệu `learning_styles.csv`).
-- **AI Tutor:** chat với Gemini.
-- **Focus Mode & Pomodoro:** đếm thời gian tập trung.
-- **Gợi ý nội dung:** danh sách môn / video mẫu trên dashboard (có thể mở rộng thành gợi ý thông minh sau).
+**Repository:** [github.com/Minhwritecode/EduMindAI](https://github.com/Minhwritecode/EduMindAI)
 
 ---
 
-🚀 Tổng quan
-EduAI thích ứng với sở thích học tập của người dùng và tối ưu hóa trải nghiệm học tập của họ bằng cách sử dụng:
+## Features
 
-Dự đoán phong cách học tập dựa trên học máy
-Giải quyết nghi ngờ bằng trí tuệ nhân tạo với GPT-2
-Đề xuất khóa học và tài liệu học tập cá nhân hóa
-Chế độ tập trung để theo dõi thời gian và phân tích năng suất.
-🔬 Mô hình học máy ứng dụng
-✅ 1. Công cụ dự đoán phong cách học tập
-Mô hình được sử dụng: Bộ phân loại Rừng ngẫu nhiên
-Mục tiêu: Phân loại người dùng vào một trong bốn phong cách học tập: Trực quan, Thính giác, Đọc/Viết, Vận động (VARK) .
-Bộ dữ liệu: Bộ dữ liệu phản hồi của người dùng với các mẫu hành vi học tập.
-Kết quả: Đạt độ chính xác 95% trong phân loại phong cách học tập.
-✅ 2. Hệ thống đề xuất thông minh
-Mô hình được sử dụng: Mô hình lai (TF-IDF, SVD, Mạng thần kinh)
-Mục tiêu: Đề xuất các khóa học và tài liệu học tập dựa trên:
-Sở thích môn học
-Mức độ khó
-Tương tác trong quá khứ
-Cách thức triển khai: Kết hợp lọc dựa trên nội dung và lọc cộng tác .
-✅ 3. Trợ giảng AI (Giải đáp thắc mắc)
-Mô hình được sử dụng: GPT-2 đã được tinh chỉnh (PyTorch)
-Mục tiêu: Cung cấp giải đáp thắc mắc tức thì, giải thích và hỗ trợ học tập tương tác .
-Dữ liệu huấn luyện: Bộ dữ liệu SQuAD v2 để tinh chỉnh Q&A.
-Triển khai:
-Tiền xử lý: Mã hóa bằng bộ mã hóa GPT-2.
-Tinh chỉnh: Huấn luyện dựa trên PyTorch trên Google Colab .
-Suy luận: Được triển khai dưới dạng API chatbot.
-Kết quả: Tạo ra các câu trả lời phù hợp với ngữ cảnh .
-✅ 4. Chế độ tập trung & Công cụ theo dõi năng suất
-Mô hình được sử dụng: Hồi quy Logistic và Phân tích chuỗi thời gian
-Mục tiêu: Giúp người dùng theo dõi thời gian học tập tập trung và phân tích xu hướng năng suất .
-Triển khai:
-Theo dõi thời gian với dữ liệu phiên người dùng
-Dự đoán thời gian học tập tối ưu
-Phân tích các mô hình tiêu điểm
-
----
-## Công nghệ
-
-| Lớp | Công nghệ |
-|-----|-----------|
-| App | Flutter (Dart), `provider`, `http`, `flutter_gemini` |
-| Backend | Flask, pandas, scikit-learn, pymongo, flask-cors |
-| AI trong app | Google Gemini API |
-| ML trên server | Random Forest — phân loại VARK |
-| Lưu trữ tùy chọn | MongoDB Atlas (qua Flask, không nhúng URI trong app) |
+- **Smart Dashboard:** A centralized, aesthetically-pleasing dark theme dashboard featuring a live clock, dynamic motivational quotes, an overview of your daily timetable, your to-do tasks, and quick access to your most recent notebooks.
+- **My Learning (Notebooks):** A persistent workspace to store your notes and documents. This serves as the grounding context for the AI.
+- **AI Study Asset Generation:** Inside any notebook, you can leverage Gemini to automatically generate:
+  - Mindmaps
+  - Quizzes
+  - Flashcards
+  - Summaries & Reports
+- **My Schedule:** A visual timetable grid to manage your weekly classes and activities using an intuitive "Tiết" (Period) system.
+- **To-Do List:** Track your upcoming tasks and optionally link them to specific notebooks for quick reference.
+- **Focus Mode & Pomodoro:** A built-in Pomodoro timer to help you focus during study sessions.
+- **AI Tutor:** Interactive chat with Gemini grounded in your workspace context.
 
 ---
 
-## Chạy ứng dụng Flutter
+## Tech Stack
 
-```bash
-flutter pub get
-flutter run \
-  --dart-define=GEMINI_API_KEY=YOUR_KEY \
-  --dart-define=API_BASE_URL=http://127.0.0.1:5000 \
-  --dart-define=APP_USER_ID=minh
-```
-
-- **Android emulator** trỏ Flask trên máy host: `API_BASE_URL=http://10.0.2.2:5000`
-- **Chạy test:** `flutter test`
+| Layer | Technologies |
+|-------|--------------|
+| **Frontend App** | Flutter (Dart), `provider`, `flutter_gemini`, `flutter_dotenv` |
+| **Backend Server**| Python, FastAPI, Uvicorn, Motor (Async MongoDB), Google Generative AI |
+| **Database** | MongoDB Atlas |
+| **AI Models** | Google Gemini (via API) |
 
 ---
 
-## Chạy backend (Flask)
+## Setup Instructions
 
-```bash
-python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
-pip install -r requirements.txt
-cp .env.example .env
-```
+### 1. Prerequisites
+- **Flutter SDK** installed (for running the app).
+- **Python 3.8+** installed (for running the FastAPI server).
+- A **MongoDB Atlas** cluster URI (or local MongoDB).
+- A **Google Gemini API Key** (from Google AI Studio).
 
-Trong `.env` đặt `MONGO_URI=...` nếu dùng đồng bộ notebook (xem [MongoDB Atlas](https://www.mongodb.com/docs/atlas/getting-started/)). Không commit `.env`.
+### 2. Backend Setup (FastAPI)
 
-```bash
-python app.py
-```
+1. Navigate to the `server` directory:
+   ```bash
+   cd server
+   ```
+2. Create and activate a Python virtual environment:
+   ```bash
+   python3 -m venv .venv
+   source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+   ```
+3. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+4. Create a `.env` file inside the `server` directory and add your credentials:
+   ```env
+   MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority
+   GEMINI_API_KEY=your_gemini_api_key_here
+   ```
+5. Run the backend server:
+   ```bash
+   uvicorn main:app --port 5000 --reload
+   ```
+   *The server will start at `http://127.0.0.1:5000` or `http://localhost:5000`.*
 
-**API chính**
+### 3. Frontend Setup (Flutter)
 
-| Phương thức | Đường dẫn | Mô tả |
-|-------------|-----------|--------|
-| `POST` | `/predictLearningStyle` | JSON `Question1` … `Question5` (1–5) → `learningStyle` |
-| `GET` | `/health` | `{ "ok", "mongo" }` |
-| `POST` | `/api/notebook-context` | Lưu `{ "userId", "text" }` |
-| `GET` | `/api/notebook-context?userId=...` | Lấy text notebook |
-
-Không có `MONGO_URI` thì hai endpoint notebook trả **503**; ML VARK vẫn chạy nếu có `learning_styles.csv`.
+1. Open a new terminal in the root project directory (`EduMindAI`).
+2. Fetch Flutter dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Create a `.env` file in the root project directory (`EduMindAI/.env`) for the Flutter app:
+   ```env
+   GEMINI_API_KEY=your_gemini_api_key_here
+   API_BASE_URL=http://127.0.0.1:5000
+   ```
+   *(Note: If you are running on an Android Emulator, use `http://10.0.2.2:5000` instead of `127.0.0.1`)*
+4. Run the Flutter app:
+   ```bash
+   flutter run
+   ```
+   *(We recommend running on Desktop or Web to experience the fixed-height dashboard layout.)*
 
 ---
 
-## Cấu trúc thư mục (Dart)
+## How to Use the App
 
-| Đường dẫn | Vai trò |
-|-----------|---------|
-| `lib/main.dart` | Khởi tạo app, Gemini (nếu có key) |
-| `lib/const.dart` | `API_BASE_URL`, `APP_USER_ID`, `GEMINI_API_KEY` (từ `--dart-define`) |
-| `lib/home_page_visual.dart` | Dashboard, Notebook, chip công cụ |
-| `lib/notebook_tool_screens.dart` | Mindmap, Quiz notebook, Flashcard, …, Pomodoro |
-| `lib/schedule_analyze_page.dart` | Phân tích lịch học |
-| `lib/learning_style_page.dart` | Quiz VARK → HTTP Flask |
-| `lib/services/notebook_mongo_sync.dart` | Gọi API notebook |
-| `lib/state/notebook_context_state.dart` | State ngữ cảnh Notebook |
+1. **Dashboard Navigation**: The app uses a smooth sliding navigation system (`PageView`). Use the bottom navigation bar to slide horizontally between the **Dashboard**, **My Learning**, and **My Schedule** tabs.
+2. **Managing Tasks**: On the Dashboard, click the **`+` icon** next to the "To Do List" header to add a new task. You can optionally link this task to an existing notebook. Checking off a task will automatically update the database.
+3. **Creating Notes**: Go to **My Learning**, click "New Notebook", and start pasting your study materials or document content.
+4. **Generating AI Assets**: While viewing a Notebook, you will see a list of tools at the bottom. Click on "Mindmap", "Quiz", or "Flashcards" to generate study aids strictly based on the text inside that notebook.
+5. **Managing Your Timetable**: Go to **My Schedule** to view your weekly grid. Click the **`+` Floating Action Button** to add a new class slot by specifying the day, start period, end period, and subject. Click any existing card on the timetable to update or delete it.
+6. **Focusing**: Click the "Pomodoro" floating button on the Dashboard to start a focus timer.
 
 ---
 
-## Bảo mật
-
-- Không commit **`.env`**, **API key Gemini**, hay chuỗi **MongoDB** vào Git.
-- Nếu `MONGO_URI` hoặc PAT GitHub từng lộ: đổi mật khẩu user DB / thu hồi token trên GitHub.
-
----
-
-## Ghi chú sản phẩm
-
-- Màn **đăng nhập** hiện là luồng demo (nút đăng nhập vào Dashboard).
-- **Quiz trong Notebook** (sinh câu hỏi từ nội dung bạn dán) khác **quiz VARK** (gọi Flask); hai luồng độc lập.
+## Security Notes
+- Never commit your `.env` files to Git.
+- Ensure your MongoDB network access allows connections from your current IP or `0.0.0.0/0` if deploying globally.
