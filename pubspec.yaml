@@ -48,7 +48,7 @@ dependencies:
   provider: ^6.1.2
   flutter_dotenv: ^6.0.1
   shared_preferences: ^2.5.5
-
+  audioplayers: ^6.0.0
 
 dev_dependencies:
   flutter_test:
@@ -76,6 +76,7 @@ flutter:
   assets:
      - .env
      - lib/assets/profile_icon.jpg
+     - assets/alarm.wav
   #   - images/a_dot_ham.jpeg
 
   # An image asset can refer to one or more resolution-specific "variants", see

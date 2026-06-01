@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'focus_mode_page.dart';
+import 'dart:async';
+import 'dart:math';
+import 'package:intl/intl.dart';
+
+import 'pomodoro_popup.dart';
 import 'my_learning_page.dart';
 import 'schedule_analyze_page.dart';
 import 'state/notebook_context_state.dart';
@@ -16,15 +20,143 @@ class HomePage extends StatefulWidget {
 }
 
 class _HomePageState extends State<HomePage> {
-  String? _selectedPreference;
   int _selectedIndex = 0;
-  bool _isLoading = false;
+  late PageController _pageController;
 
+  @override
+  void initState() {
+    super.initState();
+    _pageController = PageController(initialPage: _selectedIndex);
+  }
+
+  @override
+  void dispose() {
+    _pageController.dispose();
+    super.dispose();
+  }
+
+  void _onItemTapped(int index) {
+    if (index == _selectedIndex) return;
+    setState(() {
+      _selectedIndex = index;
+    });
+    _pageController.animateToPage(
+      index,
+      duration: const Duration(milliseconds: 300),
+      curve: Curves.easeInOut,
+    );
+  }
+
+  void _onPageChanged(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
+  String _getAppBarTitle() {
+    switch (_selectedIndex) {
+      case 0: return 'PMDEduMind Dashboard';
+      case 1: return 'My Learning';
+      case 2: return 'Thời Khóa Biểu';
+      default: return 'PMDEduMind';
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        backgroundColor: const Color(0xFF131314),
+        elevation: 0,
+        title: Text(_getAppBarTitle(), style: const TextStyle(color: Color(0xFFE3E3E3), fontWeight: FontWeight.bold)),
+        iconTheme: const IconThemeData(color: Color(0xFFE3E3E3)),
+        bottom: PreferredSize(
+          preferredSize: const Size.fromHeight(1.0),
+          child: Container(color: Colors.white10, height: 1.0),
+        ),
+      ),
+      drawer: _buildDrawer(),
+      body: PageView(
+        controller: _pageController,
+        onPageChanged: _onPageChanged,
+        physics: const BouncingScrollPhysics(),
+        children: const [
+          DashboardView(),
+          MyLearningPage(),
+          ScheduleAnalyzePage(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton.extended(
+        onPressed: () {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (context) => const PomodoroPopup(),
+          );
+        },
+        backgroundColor: const Color(0xFF48A9A6),
+        icon: const Icon(Icons.timer, color: Colors.white),
+        label: const Text('Pomodoro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+      ),
+      bottomNavigationBar: Container(
+        decoration: const BoxDecoration(
+          border: Border(top: BorderSide(color: Colors.white10, width: 1.0)),
+        ),
+        child: BottomNavigationBar(
+          backgroundColor: const Color(0xFF1E1F22),
+          currentIndex: _selectedIndex,
+          onTap: _onItemTapped,
+          selectedItemColor: const Color(0xFF48A9A6),
+          unselectedItemColor: Colors.grey.shade600,
+          type: BottomNavigationBarType.fixed,
+          items: const [
+            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
+            BottomNavigationBarItem(icon: Icon(Icons.book), label: 'My Learning'),
+            BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'My schedule'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDrawer() {
+    return Drawer(
+      backgroundColor: const Color(0xFF1E1F22),
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          const DrawerHeader(
+            decoration: BoxDecoration(color: Color(0xFF131314)),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                CircleAvatar(radius: 40, backgroundImage: AssetImage('lib/assets/profile_icon.jpg')),
+                SizedBox(height: 10),
+                Text('Tien Minh', style: TextStyle(color: Color(0xFFE3E3E3), fontSize: 18, fontWeight: FontWeight.bold)),
+              ],
+            ),
+          ),
+          ListTile(title: const Text('Cài đặt', style: TextStyle(color: Color(0xFFE3E3E3))), onTap: () {}),
+          ListTile(title: const Text('Hỏi đáp (FAQ)', style: TextStyle(color: Color(0xFFE3E3E3))), onTap: () {}),
+        ],
+      ),
+    );
+  }
+}
+
+class DashboardView extends StatefulWidget {
+  const DashboardView({super.key});
+
+  @override
+  State<DashboardView> createState() => _DashboardViewState();
+}
+
+class _DashboardViewState extends State<DashboardView> {
+  bool _isLoading = false;
   List<svc.TimetableDay> _timetable = [];
   List<svc.TodoTask> _todoList = [];
   List<nb_sync.Notebook> _notebooks = [];
 
-  // Example data placeholders for recommended videos
   final List<String> videoTitles = [
     'C++ Basics in One Shot - Strivers A2Z DSA Course - L1',
     'Introduction to JavaScript + Setup | JavaScript Tutorial in Hindi #1',
@@ -41,24 +173,51 @@ class _HomePageState extends State<HomePage> {
     'https://www.someurl.com/your-image4.jpg',
   ];
 
+  final List<String> _quotes = [
+    "The secret of getting ahead is getting started.",
+    "It always seems impossible until it's done.",
+    "Don't watch the clock; do what it does. Keep going.",
+    "Success is not final, failure is not fatal: it is the courage to continue that counts.",
+    "Believe you can and you're halfway there.",
+    "Study hard what interests you the most in the most undisciplined, irreverent and original manner possible.",
+  ];
+  late String _currentQuote;
+
+  Timer? _timer;
+  DateTime _currentTime = DateTime.now();
+
+  final TextEditingController _taskController = TextEditingController();
+  String? _selectedNotebookForTask;
+
   @override
   void initState() {
     super.initState();
+    _currentQuote = _quotes[Random().nextInt(_quotes.length)];
+    
+    _timer = Timer.periodic(const Duration(minutes: 1), (Timer t) {
+      if (mounted) setState(() => _currentTime = DateTime.now());
+    });
+
     _loadData();
+  }
+
+  @override
+  void dispose() {
+    _timer?.cancel();
+    _taskController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final userId = context.read<NotebookContextState>().userId;
     
-    // 1. Fetch Schedules
     final (schedule, _) = await svc.ScheduleService.fetchSchedule(userId);
     if (schedule != null) {
       _timetable = schedule.timetable;
       _todoList = schedule.todoList;
     }
 
-    // 2. Fetch Notebooks to allow linking
     final (notebooks, _) = await nb_sync.NotebookMongoSync.fetchNotebooks(userId);
     if (notebooks != null) {
       _notebooks = notebooks;
@@ -68,37 +227,6 @@ class _HomePageState extends State<HomePage> {
       setState(() => _isLoading = false);
     }
   }
-
-  void _onItemTapped(int index) {
-    setState(() {
-      _selectedIndex = index;
-    });
-    switch (index) {
-      case 0:
-        break;
-      case 1:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MyLearningPage()),
-        ).then((_) => _loadData());
-        break;
-      case 2:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const ScheduleAnalyzePage()),
-        );
-        break;
-      case 3:
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const FocusModePage()),
-        );
-        break;
-    }
-  }
-
-  final TextEditingController _taskController = TextEditingController();
-  String? _selectedNotebookForTask;
 
   Future<void> _addTask() async {
     final title = _taskController.text.trim();
@@ -160,81 +288,427 @@ class _HomePageState extends State<HomePage> {
     ).then((_) => _loadData());
   }
 
-  void _addTimetableSlotDialog() {
-    final subjectCtrl = TextEditingController();
-    final startCtrl = TextEditingController(text: '08:00');
-    final endCtrl = TextEditingController(text: '09:30');
-    final roomCtrl = TextEditingController();
-    String selectedDay = 'Monday';
-    String? selectedNotebook;
+  @override
+  Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator(color: Color(0xFF48A9A6)));
+    }
 
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        if (constraints.maxWidth > 800) {
+          // Desktop: Fixed height layout using Expanded
+          return Padding(
+            padding: const EdgeInsets.all(16.0),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.stretch, // Makes children fill vertical space
+              children: [
+                Expanded(flex: 3, child: _buildLeftColumn(isFixed: true)),
+                const SizedBox(width: 16),
+                Expanded(flex: 2, child: _buildRightColumn(isFixed: true)),
+              ],
+            ),
+          );
+        } else {
+          // Mobile: Scrollable layout
+          return RefreshIndicator(
+            onRefresh: _loadData,
+            child: SingleChildScrollView(
+              physics: const AlwaysScrollableScrollPhysics(),
+              padding: const EdgeInsets.all(16.0),
+              child: Column(
+                children: [
+                  _buildLeftColumn(isFixed: false),
+                  const SizedBox(height: 16),
+                  _buildRightColumn(isFixed: false),
+                  const SizedBox(height: 80), // padding for FAB
+                ],
+              ),
+            ),
+          );
+        }
+      },
+    );
+  }
+
+  Widget _buildLeftColumn({required bool isFixed}) {
+    final children = [
+      _buildTopHeaderRow(isFixed: isFixed),
+      const SizedBox(height: 16),
+      _buildQuotesBlock(),
+      const SizedBox(height: 16),
+      if (isFixed)
+        Expanded(child: _buildRecommendedCourseBlock())
+      else
+        _buildRecommendedCourseBlock(),
+    ];
+
+    if (isFixed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+  }
+
+  Widget _buildRightColumn({required bool isFixed}) {
+    final children = [
+      if (isFixed)
+        Expanded(flex: 2, child: _buildTimetableBlock(isFixed: isFixed))
+      else
+        _buildTimetableBlock(isFixed: isFixed),
+      const SizedBox(height: 16),
+      if (isFixed)
+        Expanded(flex: 3, child: _buildTodoListBlock(isFixed: isFixed))
+      else
+        _buildTodoListBlock(isFixed: isFixed),
+    ];
+
+    if (isFixed) {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    } else {
+      return Column(
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: children,
+      );
+    }
+  }
+
+  Widget _buildTopHeaderRow({required bool isFixed}) {
+    final cardContent = Column(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Row(
+          children: [
+            Expanded(
+              child: Container(
+                padding: const EdgeInsets.all(24),
+                decoration: BoxDecoration(
+                  color: const Color(0xFF131314),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      DateFormat('hh:mm a').format(_currentTime),
+                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3)),
+                    ),
+                    const SizedBox(height: 4),
+                    Text(
+                      DateFormat('EEEE, MMMM d').format(_currentTime),
+                      style: const TextStyle(fontSize: 16, color: Colors.white60),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 16),
+            Expanded(
+              child: Container(
+                height: 120,
+                decoration: BoxDecoration(
+                  color: const Color(0xFF131314),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white10),
+                ),
+                child: const Center(
+                  child: Text(
+                    "Image Placeholder\n(To be uploaded)",
+                    textAlign: TextAlign.center,
+                    style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w500),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 16),
+        const Align(
+          alignment: Alignment.centerLeft,
+          child: Text("Latest Notebooks", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+        ),
+        const SizedBox(height: 8),
+        SizedBox(
+          height: 100,
+          child: _notebooks.isEmpty 
+            ? const Center(child: Text("No notebooks yet.", style: TextStyle(color: Colors.white38)))
+            : ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: min(5, _notebooks.length),
+                itemBuilder: (context, index) {
+                  final nb = _notebooks[index];
+                  return Container(
+                    width: 140,
+                    margin: const EdgeInsets.only(right: 12),
+                    child: Material(
+                      color: const Color(0xFF48A9A6).withOpacity(0.1),
+                      borderRadius: BorderRadius.circular(8),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(8),
+                        onTap: () => _openNotebookById(nb.id),
+                        child: Padding(
+                          padding: const EdgeInsets.all(12.0),
+                          child: Center(
+                            child: Text(
+                              nb.title, 
+                              maxLines: 2, 
+                              textAlign: TextAlign.center,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF48A9A6)),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+        ),
+      ],
+    );
+
+    return Card(
+      elevation: 0,
+      color: const Color(0xFF1E1F22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Colors.white10),
+      ),
+      child: Padding(padding: const EdgeInsets.all(16.0), child: cardContent),
+    );
+  }
+
+  Widget _buildQuotesBlock() {
+    return Card(
+      elevation: 0,
+      color: const Color(0xFF131314),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Color(0xFF48A9A6), width: 1),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 32),
+        child: Column(
+          children: [
+            const Icon(Icons.format_quote, color: Color(0xFF48A9A6), size: 32),
+            const SizedBox(height: 12),
+            Text(
+              _currentQuote,
+              textAlign: TextAlign.center,
+              style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Color(0xFFE3E3E3), height: 1.5),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRecommendedCourseBlock() {
+    return Card(
+      elevation: 0,
+      color: const Color(0xFF1E1F22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Colors.white10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text('Recommended Courses', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            const SizedBox(height: 12),
+            Expanded(
+              flex: 1,
+              child: ListView.builder(
+                scrollDirection: Axis.horizontal,
+                itemCount: videoTitles.length,
+                itemBuilder: (context, index) {
+                  return Container(
+                    width: 200,
+                    margin: const EdgeInsets.only(right: 12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131314),
+                      border: Border.all(color: Colors.white10),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                          borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
+                          child: Image.network(videoImageUrls[index], height: 90, width: double.infinity, fit: BoxFit.cover),
+                        ),
+                        Expanded(
+                          child: Padding(
+                            padding: const EdgeInsets.all(8.0),
+                            child: Text(
+                              videoTitles[index], 
+                              maxLines: 2, 
+                              overflow: TextOverflow.ellipsis, 
+                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFE3E3E3)),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimetableBlock({required bool isFixed}) {
+    final today = DateFormat('EEEE').format(DateTime.now());
+    final dayData = _timetable.firstWhere((d) => d.dayOfWeek == today, orElse: () => svc.TimetableDay(dayOfWeek: today, slots: []));
+    final slots = dayData.slots;
+
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            const Text('Timetable (Today)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            TextButton(
+              onPressed: () {
+                // To switch page we would need a callback, or rely on them swiping.
+                // For now, doing nothing.
+              }, 
+              child: const Text("View All", style: TextStyle(color: Color(0xFF48A9A6)))
+            ),
+          ],
+        ),
+        const SizedBox(height: 12),
+        if (slots.isEmpty)
+          const Expanded(
+            flex: 1,
+            child: Center(child: Text("No classes today! Relax.", style: TextStyle(color: Colors.white38))),
+          )
+        else
+          Expanded(
+            flex: 1,
+            child: ListView.builder(
+              itemCount: slots.length,
+              itemBuilder: (context, index) {
+                final slot = slots[index];
+                return Container(
+                  margin: const EdgeInsets.only(bottom: 12),
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF131314),
+                    border: Border.all(color: const Color(0xFF48A9A6).withOpacity(0.3)),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Row(
+                    children: [
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFF48A9A6),
+                          borderRadius: BorderRadius.circular(6),
+                        ),
+                        child: Text(
+                          '${slot.startTime}',
+                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
+                        ),
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(slot.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFE3E3E3))),
+                            if (slot.roomOrLink.isNotEmpty) ...[
+                              const SizedBox(height: 4),
+                              Text(slot.roomOrLink, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                            ],
+                          ],
+                        ),
+                      ),
+                    ],
+                  ),
+                );
+              }
+            ),
+          ),
+      ],
+    );
+
+    return Card(
+      elevation: 0,
+      color: const Color(0xFF1E1F22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Colors.white10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isFixed ? content : SizedBox(height: 300, child: content),
+      ),
+    );
+  }
+
+  void _showAddTaskDialog() {
     showDialog(
       context: context,
       builder: (context) {
         return StatefulBuilder(
           builder: (context, setDialogState) {
             return AlertDialog(
-              title: const Text('Thêm Lịch Học Tập'),
-              content: SingleChildScrollView(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    DropdownButtonFormField<String>(
-                      value: selectedDay,
-                      decoration: const InputDecoration(labelText: 'Thứ trong tuần'),
-                      items: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-                          .map((d) => DropdownMenuItem(value: d, child: Text(d)))
-                          .toList(),
-                      onChanged: (v) => setDialogState(() => selectedDay = v!),
+              backgroundColor: const Color(0xFF1E1F22),
+              title: const Text('Thêm Nhiệm Vụ', style: TextStyle(color: Color(0xFFE3E3E3))),
+              content: Column(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  TextField(
+                    controller: _taskController,
+                    style: const TextStyle(color: Color(0xFFE3E3E3)),
+                    decoration: const InputDecoration(
+                      hintText: 'Nhập nhiệm vụ mới...',
+                      hintStyle: TextStyle(color: Colors.white38),
+                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
+                      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF48A9A6))),
                     ),
-                    TextField(controller: subjectCtrl, decoration: const InputDecoration(labelText: 'Môn học / Chủ đề')),
-                    Row(
-                      children: [
-                        Expanded(child: TextField(controller: startCtrl, decoration: const InputDecoration(labelText: 'Bắt đầu (HH:MM)'))),
-                        const SizedBox(width: 12),
-                        Expanded(child: TextField(controller: endCtrl, decoration: const InputDecoration(labelText: 'Kết thúc (HH:MM)'))),
-                      ],
-                    ),
-                    TextField(controller: roomCtrl, decoration: const InputDecoration(labelText: 'Phòng học / Link Zoom')),
-                    const SizedBox(height: 12),
-                    DropdownButtonFormField<String>(
-                      value: selectedNotebook,
-                      decoration: const InputDecoration(labelText: 'Gắn với Notebook'),
-                      items: _notebooks.map((nb) => DropdownMenuItem(value: nb.id, child: Text(nb.title))).toList(),
-                      onChanged: (v) => setDialogState(() => selectedNotebook = v),
-                    ),
-                  ],
-                ),
+                    autofocus: true,
+                  ),
+                  const SizedBox(height: 16),
+                  DropdownButton<String>(
+                    isExpanded: true,
+                    dropdownColor: const Color(0xFF1E1F22),
+                    hint: const Text('Liên kết Notebook (Tùy chọn)', style: TextStyle(fontSize: 12, color: Colors.white60)),
+                    value: _selectedNotebookForTask,
+                    items: _notebooks.map((nb) => DropdownMenuItem(value: nb.id, child: Text(nb.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xFFE3E3E3))))).toList(),
+                    onChanged: (v) => setDialogState(() => _selectedNotebookForTask = v),
+                  ),
+                ],
               ),
               actions: [
-                TextButton(onPressed: () => Navigator.pop(context), child: const Text('Hủy', style: TextStyle(color: Colors.grey))),
+                TextButton(
+                  onPressed: () => Navigator.pop(context),
+                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                ),
                 FilledButton(
                   style: FilledButton.styleFrom(backgroundColor: const Color(0xFF48A9A6)),
                   onPressed: () async {
-                    if (subjectCtrl.text.trim().isEmpty) return;
+                    if (_taskController.text.trim().isEmpty) return;
                     Navigator.pop(context);
-
-                    final newSlot = svc.TimeSlot(
-                      startTime: startCtrl.text.trim(),
-                      endTime: endCtrl.text.trim(),
-                      subject: subjectCtrl.text.trim(),
-                      roomOrLink: roomCtrl.text.trim(),
-                      notebookId: selectedNotebook ?? '',
-                    );
-
-                    // Update timetable local list
-                    final dayIndex = _timetable.indexWhere((d) => d.dayOfWeek == selectedDay);
-                    if (dayIndex >= 0) {
-                      _timetable[dayIndex].slots.add(newSlot);
-                    }
-
-                    final userId = context.read<NotebookContextState>().userId;
-                    setState(() => _isLoading = true);
-                    final err = await svc.ScheduleService.updateTimetable(userId, _timetable);
-                    if (err != null) {
-                      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi: $err')));
-                    }
-                    await _loadData();
+                    await _addTask();
                   },
                   child: const Text('Thêm'),
                 ),
@@ -246,306 +720,88 @@ class _HomePageState extends State<HomePage> {
     );
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color(0xFFF6F8FA),
-      appBar: AppBar(
-        backgroundColor: const Color(0xFF48A9A6),
-        title: const Text('PMDEduMind', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      drawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+  Widget _buildTodoListBlock({required bool isFixed}) {
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: Color(0xFF48A9A6)),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  CircleAvatar(radius: 40, backgroundImage: AssetImage('lib/assets/profile_icon.jpg')),
-                  SizedBox(height: 10),
-                  Text('Tien Minh', style: TextStyle(color: Colors.white, fontSize: 18, fontWeight: FontWeight.bold)),
-                ],
-              ),
+            const Text('To Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            IconButton(
+              icon: const Icon(Icons.add_circle_outline, color: Color(0xFF48A9A6)),
+              onPressed: _showAddTaskDialog,
             ),
-            ListTile(title: const Text('Cài đặt'), onTap: () {}),
-            ListTile(title: const Text('Hỏi đáp (FAQ)'), onTap: () {}),
           ],
         ),
-      ),
-      body: _isLoading 
-        ? const Center(child: CircularProgressIndicator(color: Color(0xFF48A9A6)))
-        : RefreshIndicator(
-            onRefresh: _loadData,
-            child: SingleChildScrollView(
-              physics: const AlwaysScrollableScrollPhysics(),
-              child: Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    // Search & Preference Row
-                    Row(
-                      children: [
-                        const Expanded(
-                          child: TextField(
-                            decoration: InputDecoration(
-                              hintText: 'Tìm kiếm tài liệu...',
-                              prefixIcon: Icon(Icons.search),
-                              border: OutlineInputBorder(borderRadius: BorderRadius.all(Radius.circular(30))),
-                              filled: true,
-                              fillColor: Colors.white,
-                              contentPadding: EdgeInsets.zero,
-                            ),
-                          ),
-                        ),
-                        const SizedBox(width: 12),
-                        DropdownButton<String>(
-                          hint: const Text('Học tập', style: TextStyle(color: Color(0xFF48A9A6), fontWeight: FontWeight.bold)),
-                          value: _selectedPreference,
-                          items: ['Visual', 'Auditory', 'Reading/Writing', 'Kinesthetic']
-                              .map((p) => DropdownMenuItem(value: p, child: Text(p)))
-                              .toList(),
-                          onChanged: (v) => setState(() => _selectedPreference = v),
-                        ),
-                      ],
+        const SizedBox(height: 4),
+        
+        _todoList.isEmpty
+          ? const Expanded(
+              flex: 1,
+              child: Center(child: Text('Không có nhiệm vụ nào! Thư giãn thôi.', style: TextStyle(color: Colors.white38))),
+            )
+          : Expanded(
+              flex: 1,
+              child: ListView.builder(
+                itemCount: _todoList.length,
+                itemBuilder: (context, index) {
+                  final task = _todoList[index];
+                  final isLinked = task.notebookId.isNotEmpty;
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 8),
+                    decoration: BoxDecoration(
+                      color: task.isCompleted ? const Color(0xFF131314).withOpacity(0.5) : const Color(0xFF131314),
+                      border: Border.all(color: Colors.white10),
+                      borderRadius: BorderRadius.circular(12),
                     ),
-                    const SizedBox(height: 20),
-
-                    // Weekly Timetable Grid/Row
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        const Text('Lịch Học Của Bạn', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002131))),
-                        IconButton(
-                          icon: const Icon(Icons.add_circle_outline, color: Color(0xFF48A9A6), size: 28),
-                          onPressed: _addTimetableSlotDialog,
-                        )
-                      ],
-                    ),
-                    const SizedBox(height: 10),
-                    _buildTimetableSection(),
-
-                    const SizedBox(height: 24),
-                    const Text('Gợi Ý Cho Bạn', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002131))),
-                    const SizedBox(height: 10),
-                    SizedBox(
-                      height: 180,
-                      child: ListView.builder(
-                        scrollDirection: Axis.horizontal,
-                        itemCount: videoTitles.length,
-                        itemBuilder: (context, index) {
-                          return Padding(
-                            padding: const EdgeInsets.only(right: 12),
-                            child: SizedBox(
-                              width: 180,
-                              child: Card(
-                                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                                child: Column(
-                                  crossAxisAlignment: CrossAxisAlignment.start,
-                                  children: [
-                                    ClipRRect(
-                                      borderRadius: const BorderRadius.vertical(top: Radius.circular(12)),
-                                      child: Image.network(videoImageUrls[index], width: 180, height: 100, fit: BoxFit.cover),
-                                    ),
-                                    Padding(
-                                      padding: const EdgeInsets.all(8.0),
-                                      child: Text(videoTitles[index], maxLines: 2, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-                                    ),
-                                  ],
-                                ),
-                              ),
-                            ),
-                          );
-                        },
+                    child: ListTile(
+                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
+                      leading: Checkbox(
+                        value: task.isCompleted,
+                        activeColor: const Color(0xFF48A9A6),
+                        checkColor: Colors.white,
+                        onChanged: (_) => _toggleTaskCompletion(task),
                       ),
-                    ),
-
-                    const SizedBox(height: 24),
-                    const Text('Nhiệm Vụ Cần Làm (To-Do)', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002131))),
-                    const SizedBox(height: 12),
-                    
-                    // Task Input Field
-                    Card(
-                      elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12), side: BorderSide(color: Colors.grey.shade200)),
-                      child: Padding(
-                        padding: const EdgeInsets.all(12.0),
-                        child: Column(
-                          children: [
-                            TextField(
-                              controller: _taskController,
-                              decoration: const InputDecoration(
-                                hintText: 'Nhập nhiệm vụ mới...',
-                                border: InputBorder.none,
-                              ),
-                            ),
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                              children: [
-                                DropdownButton<String>(
-                                  hint: const Text('Liên kết Notebook'),
-                                  value: _selectedNotebookForTask,
-                                  items: _notebooks.map((nb) => DropdownMenuItem(value: nb.id, child: Text(nb.title))).toList(),
-                                  onChanged: (v) => setState(() => _selectedNotebookForTask = v),
-                                ),
-                                FilledButton(
-                                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF48A9A6)),
-                                  onPressed: _addTask,
-                                  child: const Text('Thêm Task'),
-                                ),
-                              ],
-                            )
-                          ],
+                      title: Text(
+                        task.title,
+                        style: TextStyle(
+                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
+                          color: task.isCompleted ? Colors.white38 : const Color(0xFFE3E3E3),
+                          fontSize: 14,
                         ),
                       ),
+                      subtitle: isLinked 
+                        ? GestureDetector(
+                            onTap: () => _openNotebookById(task.notebookId),
+                            child: const Text(
+                              '🔗 Xem tài liệu liên kết',
+                              style: TextStyle(color: Color(0xFF48A9A6), fontWeight: FontWeight.bold, fontSize: 11),
+                            ),
+                          )
+                        : null,
+                      trailing: IconButton(
+                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
+                        onPressed: () => _deleteTask(task.taskId),
+                      ),
                     ),
-                    const SizedBox(height: 12),
-                    
-                    // Tasks List
-                    _todoList.isEmpty
-                      ? const Padding(
-                          padding: EdgeInsets.symmetric(vertical: 20),
-                          child: Center(child: Text('Không có nhiệm vụ nào! Thư giãn thôi.', style: TextStyle(color: Colors.grey))),
-                        )
-                      : ListView.builder(
-                          shrinkWrap: true,
-                          physics: const NeverScrollableScrollPhysics(),
-                          itemCount: _todoList.length,
-                          itemBuilder: (context, index) {
-                            final task = _todoList[index];
-                            final isLinked = task.notebookId.isNotEmpty;
-                            return Card(
-                              margin: const EdgeInsets.only(bottom: 8),
-                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                              child: ListTile(
-                                leading: Checkbox(
-                                  value: task.isCompleted,
-                                  activeColor: const Color(0xFF48A9A6),
-                                  onChanged: (_) => _toggleTaskCompletion(task),
-                                ),
-                                title: Text(
-                                  task.title,
-                                  style: TextStyle(
-                                    decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                                    color: task.isCompleted ? Colors.grey : Colors.black87,
-                                  ),
-                                ),
-                                subtitle: isLinked 
-                                  ? GestureDetector(
-                                      onTap: () => _openNotebookById(task.notebookId),
-                                      child: const Text(
-                                        '🔗 Xem tài liệu liên kết',
-                                        style: TextStyle(color: Color(0xFF48A9A6), fontWeight: FontWeight.bold),
-                                      ),
-                                    )
-                                  : null,
-                                trailing: IconButton(
-                                  icon: const Icon(Icons.delete_outline, color: Colors.red),
-                                  onPressed: () => _deleteTask(task.taskId),
-                                ),
-                              ),
-                            );
-                          },
-                        ),
-                  ],
-                ),
+                  );
+                },
               ),
             ),
-          ),
-      bottomNavigationBar: BottomNavigationBar(
-        backgroundColor: Colors.white,
-        currentIndex: _selectedIndex,
-        onTap: _onItemTapped,
-        selectedItemColor: const Color(0xFF48A9A6),
-        unselectedItemColor: Colors.grey,
-        type: BottomNavigationBarType.fixed,
-        items: const [
-          BottomNavigationBarItem(icon: Icon(Icons.home), label: 'Dashboard'),
-          BottomNavigationBarItem(icon: Icon(Icons.book), label: 'My Learning'),
-          BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'My schedule'),
-          BottomNavigationBarItem(icon: Icon(Icons.timer), label: 'Pomodoro'),
-        ],
-      ),
+      ],
     );
-  }
 
-  Widget _buildTimetableSection() {
-    // Collect all slots across days
-    List<Map<String, dynamic>> allSlots = [];
-    for (var day in _timetable) {
-      for (var slot in day.slots) {
-        allSlots.add({
-          'day': day.dayOfWeek,
-          'slot': slot,
-        });
-      }
-    }
-
-    if (allSlots.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(24),
-        decoration: BoxDecoration(color: Colors.white, borderRadius: BorderRadius.circular(16)),
-        child: const Center(
-          child: Text('Lịch học của bạn đang trống! Nhấp vào nút + ở trên để thêm buổi học đầu tiên.', textAlign: TextAlign.center, style: TextStyle(color: Colors.grey)),
-        ),
-      );
-    }
-
-    return SizedBox(
-      height: 130,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        itemCount: allSlots.length,
-        itemBuilder: (context, index) {
-          final day = allSlots[index]['day'] as String;
-          final slot = allSlots[index]['slot'] as svc.TimeSlot;
-          final isLinked = slot.notebookId.isNotEmpty;
-
-          return Container(
-            width: 220,
-            margin: const EdgeInsets.only(right: 12, bottom: 4),
-            child: Card(
-              color: Colors.white,
-              elevation: 2,
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16), side: BorderSide(color: const Color(0xFF48A9A6).withOpacity(0.2))),
-              child: InkWell(
-                borderRadius: BorderRadius.circular(16),
-                onTap: isLinked ? () => _openNotebookById(slot.notebookId) : null,
-                child: Padding(
-                  padding: const EdgeInsets.all(12.0),
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      Row(
-                        children: [
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                            decoration: BoxDecoration(color: const Color(0xFF48A9A6).withOpacity(0.1), borderRadius: BorderRadius.circular(8)),
-                            child: Text(day.substring(0, 3).toUpperCase(), style: const TextStyle(color: Color(0xFF48A9A6), fontWeight: FontWeight.bold, fontSize: 10)),
-                          ),
-                          const Spacer(),
-                          Text('${slot.startTime}–${slot.endTime}', style: const TextStyle(color: Colors.grey, fontSize: 11, fontWeight: FontWeight.w600)),
-                        ],
-                      ),
-                      const SizedBox(height: 8),
-                      Text(slot.subject, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
-                      const SizedBox(height: 4),
-                      Text(slot.roomOrLink.isEmpty ? 'Không có phòng' : slot.roomOrLink, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(color: Colors.grey, fontSize: 11)),
-                      if (isLinked) ...[
-                        const Spacer(),
-                        const Text('🔗 Vào Notebook học tập', style: TextStyle(color: Color(0xFF48A9A6), fontSize: 10, fontWeight: FontWeight.bold)),
-                      ]
-                    ],
-                  ),
-                ),
-              ),
-            ),
-          );
-        },
+    return Card(
+      elevation: 0,
+      color: const Color(0xFF1E1F22),
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: const BorderSide(color: Colors.white10),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(16.0),
+        child: isFixed ? content : SizedBox(height: 400, child: content),
       ),
     );
   }

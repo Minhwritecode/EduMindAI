@@ -1,0 +1,26 @@
+## 🔄 Application Architecture & Workflow
+
+The user experience follows a structured progression: establishing an account, setting up schedules, importing context, and generating dynamic learning assets.
+
+### 1. User Authentication & Scheduling Flow
+
+* **Step 1:** The user creates an account or logs in via the `users` collection.
+* **Step 2:** The user populates their weekly routine in the dashboard. This interacts with the `schedules` collection, creating fixed time windows grouped by the day of the week (e.g., Monday at 08:00 AM) or adding deadline-driven tasks to the To-Do list.
+* **Step 3:** Time slots and individual tasks are mapped directly to target `notebook_id`s, allowing users to jump straight into a workspace directly from their calendar view.
+
+### 2. Notebook Creation & Context Grounding Flow
+
+* **Step 1:** The user initializes a project folder inside the `notebooks` collection.
+* **Step 2:** The user uploads content. The system parses the raw data (extracting text from PDFs or scraping URLs) and commits it to the embedded `sources` array. This text provides the baseline anchor context for the AI.
+
+### 3. Study Asset Generation Flow
+
+* **Mindmaps:** The user requests a visual breakdown. The server passes the source text to the LLM, requesting a structured JSON layout of nodes and edges. The system updates the notebook document's embedded `mindmaps` array, which the frontend visualizes automatically.
+* **Quizzes & Flashcards:** The user sets parameters for study aids. The AI processes the texts to extract key definitions and concepts, outputting clear object models stored directly inside the `quizzes` and `flashcards` sub-arrays of the target notebook.
+
+### 4. Interactive AI Chat Flow
+
+* **Step 1:** The user opens the chat pane inside a notebook workspace.
+* **Step 2:** The system sends a fetch request to the `chat_histories` collection using the unique `notebook_id`.
+* **Step 3:** When a user inputs a prompt, the system pulls relevant text segments from the notebook's `sources`, appends the previous dialogue messages for continuity, and delivers the full payload to the AI model.
+* **Step 4:** The model's response is streamed back to the user interface and saved as an immediate update to the distinct chat session document.

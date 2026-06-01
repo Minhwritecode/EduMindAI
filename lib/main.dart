@@ -36,9 +36,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PMDEduMind',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF131314),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF48A9A6),
+          surface: Color(0xFF1E1F22),
+          onSurface: Color(0xFFE3E3E3),
+        ),
       ),
       home: SplashScreen(),
       debugShowCheckedModeBanner: false,// Set LoginPage as the initial page

@@ -241,12 +241,24 @@ async def generate_mindmap(notebook_id: str, userId: str, title: str = "Database
     {context_text}
     """
     
+    import time
     try:
         model = genai.GenerativeModel("gemini-flash-latest")
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
+        
+        # Implement a simple retry for rate limits
+        for attempt in range(3):
+            try:
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(10)
+                else:
+                    raise e
+        
         graph_data = json.loads(response.text)
         
         mindmap_id = str(uuid.uuid4())
@@ -301,12 +313,23 @@ async def generate_quiz(notebook_id: str, userId: str, title: str = "Quiz trắc
     {context_text}
     """
     
+    import time
     try:
         model = genai.GenerativeModel("gemini-flash-latest")
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
+        
+        for attempt in range(3):
+            try:
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(10)
+                else:
+                    raise e
+                    
         questions = json.loads(response.text)
         
         quiz_id = str(uuid.uuid4())
@@ -360,12 +383,23 @@ async def generate_flashcards(notebook_id: str, userId: str, title: str = "Flash
     {context_text}
     """
     
+    import time
     try:
         model = genai.GenerativeModel("gemini-flash-latest")
-        response = model.generate_content(
-            prompt,
-            generation_config={"response_mime_type": "application/json"}
-        )
+        
+        for attempt in range(3):
+            try:
+                response = model.generate_content(
+                    prompt,
+                    generation_config={"response_mime_type": "application/json"}
+                )
+                break
+            except Exception as e:
+                if "429" in str(e) and attempt < 2:
+                    time.sleep(10)
+                else:
+                    raise e
+                    
         cards = json.loads(response.text)
         
         deck_id = str(uuid.uuid4())

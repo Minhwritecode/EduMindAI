@@ -1,16 +1,17 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 enum TimerMode { focus, shortBreak, longBreak }
 
-class FocusModePage extends StatefulWidget {
-  const FocusModePage({super.key});
+class PomodoroPopup extends StatefulWidget {
+  const PomodoroPopup({super.key});
 
   @override
-  _FocusModePageState createState() => _FocusModePageState();
+  _PomodoroPopupState createState() => _PomodoroPopupState();
 }
 
-class _FocusModePageState extends State<FocusModePage> {
+class _PomodoroPopupState extends State<PomodoroPopup> {
   static const int focusDuration = 25 * 60;
   static const int shortBreakDuration = 5 * 60;
   static const int longBreakDuration = 15 * 60;
@@ -19,10 +20,13 @@ class _FocusModePageState extends State<FocusModePage> {
   int _remainingSeconds = focusDuration;
   bool _isRunning = false;
   Timer? _timer;
+  
+  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void dispose() {
     _timer?.cancel();
+    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -58,10 +62,19 @@ class _FocusModePageState extends State<FocusModePage> {
         } else {
           _timer?.cancel();
           _isRunning = false;
+          _playAlarm();
           _showCompletionDialog();
         }
       });
     });
+  }
+  
+  Future<void> _playAlarm() async {
+    try {
+      await _audioPlayer.play(AssetSource('alarm.wav'));
+    } catch (e) {
+      debugPrint("Could not play alarm: $e");
+    }
   }
 
   void _pauseTimer() {
@@ -78,6 +91,15 @@ class _FocusModePageState extends State<FocusModePage> {
       _isRunning = false;
     });
   }
+  
+  void _testAlarm() {
+    _timer?.cancel();
+    setState(() {
+      _remainingSeconds = 5;
+      _isRunning = true;
+    });
+    _startTimer();
+  }
 
   void _showCompletionDialog() {
     String message = _currentMode == TimerMode.focus
@@ -86,12 +108,14 @@ class _FocusModePageState extends State<FocusModePage> {
         
     showDialog(
       context: context,
+      barrierDismissible: false,
       builder: (context) => AlertDialog(
-        title: const Text("Time's up!"),
+        title: const Text("Time's up! ⏰"),
         content: Text(message),
         actions: [
           TextButton(
             onPressed: () {
+              _audioPlayer.stop();
               Navigator.pop(context);
             },
             child: const Text("OK", style: TextStyle(color: Color(0xFF48A9A6))),
@@ -112,7 +136,7 @@ class _FocusModePageState extends State<FocusModePage> {
     return GestureDetector(
       onTap: () => _setMode(mode),
       child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
         decoration: BoxDecoration(
           color: isSelected ? const Color(0xFF48A9A6) : Colors.transparent,
           borderRadius: BorderRadius.circular(20),
@@ -122,6 +146,7 @@ class _FocusModePageState extends State<FocusModePage> {
           style: TextStyle(
             color: isSelected ? Colors.white : Colors.grey.shade700,
             fontWeight: FontWeight.bold,
+            fontSize: 12,
           ),
         ),
       ),
@@ -132,18 +157,29 @@ class _FocusModePageState extends State<FocusModePage> {
   Widget build(BuildContext context) {
     double progress = _remainingSeconds / _getDurationForMode(_currentMode);
 
-    return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      appBar: AppBar(
-        title: const Text('Pomodoro', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF48A9A6),
-        elevation: 0,
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
-      body: Center(
+    return Dialog(
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(24)),
+      backgroundColor: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 24.0, horizontal: 16.0),
         child: Column(
+          mainAxisSize: MainAxisSize.min,
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const Text('Pomodoro Timer', style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002131))),
+                IconButton(
+                  icon: const Icon(Icons.close),
+                  onPressed: () {
+                    _timer?.cancel();
+                    Navigator.pop(context);
+                  },
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
             // Mode Selectors
             Container(
               padding: const EdgeInsets.all(4),
@@ -155,23 +191,23 @@ class _FocusModePageState extends State<FocusModePage> {
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   _buildModeButton("Focus", TimerMode.focus),
-                  _buildModeButton("Short Break", TimerMode.shortBreak),
-                  _buildModeButton("Long Break", TimerMode.longBreak),
+                  _buildModeButton("Short", TimerMode.shortBreak),
+                  _buildModeButton("Long", TimerMode.longBreak),
                 ],
               ),
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 30),
 
             // Timer Display
             Stack(
               alignment: Alignment.center,
               children: [
                 SizedBox(
-                  width: 250,
-                  height: 250,
+                  width: 200,
+                  height: 200,
                   child: CircularProgressIndicator(
                     value: progress,
-                    strokeWidth: 12,
+                    strokeWidth: 10,
                     backgroundColor: Colors.grey.shade300,
                     valueColor: const AlwaysStoppedAnimation<Color>(Color(0xFF48A9A6)),
                   ),
@@ -179,14 +215,14 @@ class _FocusModePageState extends State<FocusModePage> {
                 Text(
                   _formatTime(_remainingSeconds),
                   style: const TextStyle(
-                    fontSize: 60,
+                    fontSize: 48,
                     fontWeight: FontWeight.w300,
                     color: Color(0xFF002131),
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 60),
+            const SizedBox(height: 30),
 
             // Controls
             Row(
@@ -198,10 +234,10 @@ class _FocusModePageState extends State<FocusModePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: const Color(0xFF48A9A6),
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: const Text('START', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
+                    child: const Text('START', style: TextStyle(fontSize: 16, letterSpacing: 1.2)),
                   )
                 else
                   ElevatedButton(
@@ -209,20 +245,27 @@ class _FocusModePageState extends State<FocusModePage> {
                     style: ElevatedButton.styleFrom(
                       backgroundColor: Colors.orange.shade400,
                       foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
                     ),
-                    child: const Text('PAUSE', style: TextStyle(fontSize: 18, letterSpacing: 1.2)),
+                    child: const Text('PAUSE', style: TextStyle(fontSize: 16, letterSpacing: 1.2)),
                   ),
-                const SizedBox(width: 20),
+                const SizedBox(width: 12),
                 IconButton(
                   onPressed: _resetTimer,
                   icon: const Icon(Icons.refresh),
                   color: Colors.grey.shade600,
-                  iconSize: 32,
+                  iconSize: 28,
                   tooltip: 'Reset Timer',
                 ),
               ],
+            ),
+            const SizedBox(height: 16),
+            TextButton.icon(
+              onPressed: _testAlarm,
+              icon: const Icon(Icons.bug_report, size: 16),
+              label: const Text('Test Alarm (5s)'),
+              style: TextButton.styleFrom(foregroundColor: Colors.grey),
             ),
           ],
         ),

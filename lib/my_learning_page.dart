@@ -117,12 +117,7 @@ class _MyLearningPageState extends State<MyLearningPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF7F8FA),
-      appBar: AppBar(
-        title: const Text('My Learning', style: TextStyle(color: Colors.white)),
-        backgroundColor: const Color(0xFF48A9A6),
-        iconTheme: const IconThemeData(color: Colors.white),
-      ),
+      backgroundColor: const Color(0xFF131314),
       body: RefreshIndicator(
         onRefresh: _fetchNotebooks,
         child: _isLoading 
@@ -134,15 +129,19 @@ class _MyLearningPageState extends State<MyLearningPage> {
                       children: [
                         Text('Error loading notebooks: $_error', style: const TextStyle(color: Colors.red)),
                         const SizedBox(height: 16),
-                        ElevatedButton(onPressed: _fetchNotebooks, child: const Text('Retry'))
+                        ElevatedButton(
+                          style: ElevatedButton.styleFrom(backgroundColor: const Color(0xFF48A9A6)),
+                          onPressed: _fetchNotebooks, 
+                          child: const Text('Retry', style: TextStyle(color: Colors.white)),
+                        )
                       ],
                     ),
                   )
                 : _notebooks.isEmpty
-                    ? Center(
+                    ? const Center(
                         child: Text(
                           'No notebooks yet. Tap + to create one.',
-                          style: TextStyle(color: Colors.grey.shade600, fontSize: 16),
+                          style: TextStyle(color: Colors.white38, fontSize: 16),
                         ),
                       )
                     : ListView.builder(
@@ -151,20 +150,25 @@ class _MyLearningPageState extends State<MyLearningPage> {
                         itemBuilder: (context, index) {
                           final nb = _notebooks[index];
                           return Card(
-                            elevation: 2,
+                            elevation: 0,
+                            color: const Color(0xFF1E1F22),
                             margin: const EdgeInsets.only(bottom: 12),
-                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(12),
+                              side: const BorderSide(color: Colors.white10),
+                            ),
                             child: ListTile(
                               contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
                               leading: CircleAvatar(
                                 backgroundColor: const Color(0xFF48A9A6).withOpacity(0.1),
                                 child: const Icon(Icons.menu_book, color: Color(0xFF48A9A6)),
                               ),
-                              title: Text(nb.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                              title: Text(nb.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFE3E3E3))),
                               subtitle: Text(
                                 nb.text.isEmpty ? 'Empty notebook' : nb.text,
                                 maxLines: 1,
                                 overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(color: Colors.white60),
                               ),
                               trailing: IconButton(
                                 icon: const Icon(Icons.delete_outline, color: Colors.red),
@@ -184,7 +188,7 @@ class _MyLearningPageState extends State<MyLearningPage> {
       floatingActionButton: FloatingActionButton.extended(
         onPressed: _createNewNotebook,
         icon: const Icon(Icons.add, color: Colors.white),
-        label: const Text('New Notebook', style: TextStyle(color: Colors.white)),
+        label: const Text('New Notebook', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
         backgroundColor: const Color(0xFF48A9A6),
       ),
     );
