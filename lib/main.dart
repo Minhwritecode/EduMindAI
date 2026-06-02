@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:provider/provider.dart';
-import 'package:smart_learning_application/const.dart'
-    show defaultUserId, effectiveGeminiApiKey, geminiApiKeyFromDotenv;
+import 'package:smart_learning_application/const.dart' show defaultUserId, effectiveGeminiApiKey, geminiApiKeyFromDotenv;
+import 'package:smart_learning_application/theme/app_theme.dart';
 import 'package:smart_learning_application/splash_screen.dart';
 import 'learning_style_page.dart';
 import 'login_page.dart';
@@ -33,10 +33,9 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PMDEduMind',
-      theme: ThemeData(
-        primarySwatch: Colors.blue,
-
-      ),
+    theme: AppTheme.lightTheme,
+    darkTheme: AppTheme.darkTheme,
+    themeMode: ThemeMode.system,
       home: const SplashScreen(),
       debugShowCheckedModeBanner: false,// Set LoginPage as the initial page
       routes: {

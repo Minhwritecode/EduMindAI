@@ -60,7 +60,7 @@ class _ScheduleAnalyzePageState extends State<ScheduleAnalyzePage> {
       final out = await geminiCompleteText(prompt.toString());
       setState(() => _result = out.trim());
     } catch (e) {
-      setState(() => _error = e.toString());
+      setState(() => _error = geminiUserMessage(e));
     } finally {
       if (mounted) setState(() => _loading = false);
     }

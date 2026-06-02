@@ -98,4 +98,34 @@ class UserDataSync {
       return e.toString();
     }
   }
+
+  static Future<(List<Map<String, dynamic>>?, String?)> fetchRecommendations(String userId) async {
+    try {
+      final res = await http.get(_uri('/api/recommendations', {'userId': userId}));
+      if (res.statusCode != 200) return (null, 'HTTP ${res.statusCode}: ${res.body}');
+      final map = jsonDecode(res.body) as Map<String, dynamic>;
+      final recs = map['recommendations'];
+      if (recs is! List) return (<Map<String, dynamic>>[], null);
+      final list = recs.map((e) => Map<String, dynamic>.from(e as Map)).toList();
+      return (list, null);
+    } catch (e) {
+      return (null, e.toString());
+    }
+  }
+
+  static Future<(String?, String?)> fetchLatestQuizResult(String userId, [String quizType = 'vark']) async {
+    try {
+      final res = await http.get(_uri('/api/quiz-results', {'userId': userId, 'quizType': quizType, 'limit': '1'}));
+      if (res.statusCode != 200) return (null, 'HTTP ${res.statusCode}: ${res.body}');
+      final map = jsonDecode(res.body) as Map<String, dynamic>;
+      final results = map['results'];
+      if (results is List && results.isNotEmpty) {
+        final style = results[0]['learningStyle']?.toString();
+        return (style, null);
+      }
+      return (null, null);
+    } catch (e) {
+      return (null, e.toString());
+    }
+  }
 }

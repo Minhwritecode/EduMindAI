@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:provider/provider.dart';
 import 'package:smart_learning_application/const.dart';
+import 'package:smart_learning_application/widgets/glass_card.dart';
 import 'package:smart_learning_application/learning_style_result_page.dart';
 import 'package:smart_learning_application/services/user_data_sync.dart';
 import 'package:smart_learning_application/state/notebook_context_state.dart';
@@ -104,12 +105,21 @@ class _QuizScreenState extends State<QuizScreen> {
     setState(() => _submitting = true);
     try {
       final base = apiBaseUrl.endsWith('/') ? apiBaseUrl.substring(0, apiBaseUrl.length - 1) : apiBaseUrl;
-      final uri = Uri.parse('$base/predictLearningStyle');
+      // Concatenate selected answers into a single text string
+      final selectedAnswers = _questions.map((q) {
+        final idx = q['selectedOption'];
+        if (idx is int) {
+          final options = q['options'] as List<String>;
+          return options[idx];
+        }
+        return '';
+      }).join(' ');
+      final uri = Uri.parse('$base/api/predictLearningStyleFromText');
       final res = await http
           .post(
             uri,
             headers: {'Content-Type': 'application/json'},
-            body: jsonEncode(_payloadForModel()),
+            body: jsonEncode({'text': selectedAnswers}),
           )
           .timeout(const Duration(seconds: 20));
       if (!mounted) return;
@@ -121,6 +131,9 @@ class _QuizScreenState extends State<QuizScreen> {
       }
       final map = jsonDecode(res.body) as Map<String, dynamic>;
       final style = map['learningStyle']?.toString() ?? 'Unknown';
+      if (mounted) {
+        context.read<NotebookContextState>().setLearningStyle(style);
+      }
       final uid = context.read<NotebookContextState>().userId;
       final syncErr = await UserDataSync.postQuizResult(
         userId: uid,
@@ -220,11 +233,7 @@ class _QuizScreenState extends State<QuizScreen> {
                 const SizedBox(height: 20),
 
                 // Question card with options
-                Card(
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(15.0),
-                  ),
-                  elevation: 4,
+                GlassCard(
                   child: Padding(
                     padding: const EdgeInsets.all(16.0),
                     child: Column(

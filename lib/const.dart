@@ -4,13 +4,26 @@ const String geminiApiKeyIfConfigured = String.fromEnvironment('GEMINI_API_KEY')
 /// Set in [main] after `dotenv.load`; use [effectiveGeminiApiKey] elsewhere.
 String geminiApiKeyFromDotenv = '';
 
-/// Resolved key: dart-define wins, else `GEMINI_API_KEY` from project-root `.env`.
-String get effectiveGeminiApiKey => geminiApiKeyIfConfigured.isNotEmpty
-    ? geminiApiKeyIfConfigured
-    : geminiApiKeyFromDotenv.trim();
+String _stripEnvQuotes(String value) {
+  var v = value.trim();
+  if (v.length >= 2) {
+    final q = v[0];
+    if ((q == '"' || q == "'") && v.endsWith(q)) {
+      v = v.substring(1, v.length - 1).trim();
+    }
+  }
+  return v;
+}
 
-/// `flutter_gemini` defaults to `models/gemini-1.0-pro`, which is no longer available (404). Use a current model.
-const String geminiGenerationModel = 'models/gemini-1.5-flash';
+/// Resolved key: dart-define wins, else `GEMINI_API_KEY` from project-root `.env`.
+String get effectiveGeminiApiKey {
+  final fromDefine = _stripEnvQuotes(geminiApiKeyIfConfigured);
+  if (fromDefine.isNotEmpty) return fromDefine;
+  return _stripEnvQuotes(geminiApiKeyFromDotenv);
+}
+
+/// Retired models (e.g. `gemini-1.5-flash`) return HTTP 404. Use `models/` prefix for flutter_gemini.
+const String geminiGenerationModel = 'models/gemini-2.0-flash';
 
 /// Flask + MongoDB + ML API (see `app.py`). Android emulator: `http://10.0.2.2:5000`
 const String apiBaseUrl = String.fromEnvironment(

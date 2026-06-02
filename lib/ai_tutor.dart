@@ -7,6 +7,8 @@ import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_learning_application/const.dart'
     show geminiGenerationModel, profileIconAsset;
+import 'package:smart_learning_application/gemini_helpers.dart';
+import 'package:smart_learning_application/widgets/tts_button.dart';
 
 class AiTutorPage extends StatefulWidget {
   const AiTutorPage({super.key});
@@ -35,6 +37,18 @@ class _AiTutorPageState extends State<AiTutorPage> {
         title: const Text(
           "AI Tutor",
         ),
+        actions: [
+          Builder(builder: (_) {
+            String latestAiText = '';
+            for (final m in messages) {
+              if (m.user == geminiUser) {
+                latestAiText = m.text;
+                break;
+              }
+            }
+            return TtsButton(text: latestAiText);
+          }),
+        ],
       ),
       body: _buildUI(),
     );
@@ -108,10 +122,26 @@ class _AiTutorPageState extends State<AiTutorPage> {
             messages = [message, ...messages];
           });
         }
-      });
+      }, onError: _onGeminiStreamError, cancelOnError: true);
     } catch (e) {
-      print(e);
+      _onGeminiStreamError(e);
     }
+  }
+
+  void _onGeminiStreamError(Object e) {
+    if (!mounted) return;
+    final msg = geminiUserMessage(e);
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(msg)));
+    setState(() {
+      messages = [
+        ChatMessage(
+          user: geminiUser,
+          createdAt: DateTime.now(),
+          text: msg,
+        ),
+        ...messages,
+      ];
+    });
   }
 
   void _sendMediaMessage() async {

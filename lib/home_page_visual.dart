@@ -1,9 +1,11 @@
 import 'dart:async';
-
+import 'dart:convert';
+import 'dart:io' show File;
+import 'package:flutter/foundation.dart' show kIsWeb;
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:file_picker/file_picker.dart';
 import 'ai_tutor.dart';
-import 'const.dart' show profileIconAsset;
 import 'focus_mode_page.dart';
 import 'notebook_tool_screens.dart';
 import 'learning_style_page.dart';
@@ -11,6 +13,15 @@ import 'schedule_analyze_page.dart';
 import 'services/notebook_mongo_sync.dart';
 import 'services/user_data_sync.dart';
 import 'state/notebook_context_state.dart';
+import 'widgets/greeting_banner.dart';
+import 'widgets/course_card.dart';
+import 'widgets/recommendations_carousel.dart';
+import 'widgets/dashboard_toolbar.dart';
+import 'widgets/dark_mode_toggle.dart';
+import 'settings_page.dart';
+import 'widgets/glass_card.dart';
+import 'data/course_urls.dart';
+import 'theme/app_theme.dart';
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -24,6 +35,8 @@ class _HomePageState extends State<HomePage> {
   Timer? _tasksSaveTimer;
 
   String? _selectedPreference; // Initialize as null to avoid the initial value error
+  List<Map<String, dynamic>> _recommendations = [];
+  bool _loadingRecommendations = false;
 
   @override
   void initState() {
@@ -33,7 +46,30 @@ class _HomePageState extends State<HomePage> {
     _notebookController.addListener(() {
       nb.setNotebookText(_notebookController.text);
     });
-    WidgetsBinding.instance.addPostFrameCallback((_) => _loadTasksFromServer());
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadTasksFromServer();
+      _loadRecommendations();
+    });
+  }
+
+  Future<void> _loadRecommendations() async {
+    setState(() => _loadingRecommendations = true);
+    final uid = context.read<NotebookContextState>().userId;
+    
+    final stylePair = await UserDataSync.fetchLatestQuizResult(uid);
+    if (mounted && stylePair.$1 != null) {
+      context.read<NotebookContextState>().setLearningStyle(stylePair.$1!);
+      _selectedPreference = stylePair.$1;
+    }
+    
+    final pair = await UserDataSync.fetchRecommendations(uid);
+    if (!mounted) return;
+    setState(() {
+      _loadingRecommendations = false;
+      if (pair.$1 != null) {
+        _recommendations = pair.$1!;
+      }
+    });
   }
 
   Future<void> _loadTasksFromServer() async {
@@ -64,20 +100,8 @@ class _HomePageState extends State<HomePage> {
     super.dispose();
   }
 
-  // Dummy list of subjects for demonstration
-  List<String> subjectNames = [
-    'Maths', 'Science', 'History', 'Language', 'Arts',
-    'Geography', 'Music', 'Computer', 'Physics', 'Biology',
-  ];
-
-  // Example data placeholders for recommended videos
-  List<String> videoTitles = [
-    'C++ Basics in One Shot - Strivers A2Z DSA Course - L1',
-    'Introduction to JavaScript + Setup | JavaScript Tutorial in Hindi #1',
-    'Python Tutorial for Beginners | Learn Python in 1.5 Hours',
-    'ApnaCollegeOfficial which Coding Platform should I study from?',
-    'Web Development Tutorial for Beginners (2024 Edition)',
-  ];
+  // Dynamically generate subject list from CourseUrls map
+  List<String> subjectNames = CourseUrls.subjectUrls.keys.toList();
 
   int _selectedIndex = 0;
 
@@ -128,44 +152,74 @@ class _HomePageState extends State<HomePage> {
     _scheduleTasksPersistence();
   }
 
+  Future<void> _importNotebookFromFile() async {
+    try {
+      final result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['txt', 'md'],
+      );
+      if (result == null) return;
+
+      String text = '';
+      if (kIsWeb) {
+        if (result.files.single.bytes != null) {
+          text = utf8.decode(result.files.single.bytes!);
+        }
+      } else {
+        if (result.files.single.path != null) {
+          final file = File(result.files.single.path!);
+          text = await file.readAsString();
+        } else if (result.files.single.bytes != null) {
+          text = utf8.decode(result.files.single.bytes!);
+        }
+      }
+
+      if (text.isNotEmpty) {
+        setState(() {
+          _notebookController.text = text;
+        });
+        context.read<NotebookContextState>().setNotebookText(text);
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Đã nạp nội dung tài liệu thành công!')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Lỗi khi nạp file: $e')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
+    final nbState = context.watch<NotebookContextState>();
     return Scaffold(
       appBar: AppBar(
-        backgroundColor: const Color(0xFF48A9A6),
+        backgroundColor: AppTheme.primary,
         title: const Text('PMDEduMind'),
-        actions: const [
-          /*IconButton(
-            icon: Image.asset(
-              'lib/assets/profile_icon.jpg', // Replace with your asset image path
-              width: 30,
-              height: 30,
-            ),
-            onPressed: () {
-              // Navigate to profile screen or show profile menu
-            },
-          ),*/
+        actions: [
+          DarkModeToggle(),
         ],
       ),
       drawer: Drawer(
         child: ListView(
           padding: EdgeInsets.zero,
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(
-                color: Color(0xFF48A9A6),
+            DrawerHeader(
+              decoration: const BoxDecoration(
+                color: Color(0xFFB3E5FC), // Light academic blue background
               ),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  CircleAvatar(
+                  const CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('lib/assets/profile_icon.jpg'),
+                    backgroundImage: AssetImage('lib/assets/generated_avatar.png'),
                   ),
-                  SizedBox(height: 10),
+                  const SizedBox(height: 10),
                   Text(
-                    'Tien Minh', 
-                    style: TextStyle(color: Colors.white, fontSize: 18),
+                    nbState.userName.isNotEmpty ? nbState.userName : 'Tien Minh', 
+                    style: const TextStyle(color: Colors.black87, fontSize: 18),
                   ),
                 ],
               ),
@@ -182,9 +236,11 @@ class _HomePageState extends State<HomePage> {
               },
             ),
             ListTile(
+              leading: const Icon(Icons.settings_outlined),
               title: const Text('Settings'),
               onTap: () {
-                // Handle navigation to settings
+                Navigator.pop(context);
+                Navigator.push(context, MaterialPageRoute(builder: (_) => const SettingsPage()));
               },
             ),
             ListTile(
@@ -203,6 +259,13 @@ class _HomePageState extends State<HomePage> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
+              const GreetingBanner(),
+              const SizedBox(height: 16),
+              const GlassCard(
+                padding: EdgeInsets.symmetric(vertical: 8, horizontal: 16),
+                child: DashboardToolbar(),
+              ),
+              const SizedBox(height: 16),
               _buildNotebookWorkspaceCard(context),
               const SizedBox(height: 16),
               Row(
@@ -233,11 +296,19 @@ class _HomePageState extends State<HomePage> {
                         ),
                       );
                     }).toList(),
-                    onChanged: (String? newValue) {
+                    onChanged: (String? newValue) async {
+                      if (newValue == null) return;
                       setState(() {
                         _selectedPreference = newValue;
                       });
-                      // Implement logic to filter based on preference
+                      final uid = context.read<NotebookContextState>().userId;
+                      context.read<NotebookContextState>().setLearningStyle(newValue);
+                      await UserDataSync.postQuizResult(
+                        userId: uid,
+                        quizType: 'vark',
+                        learningStyle: newValue,
+                      );
+                      _loadRecommendations();
                     },
                     icon: const Icon(Icons.arrow_drop_down),
                     underline: Container(),
@@ -252,51 +323,12 @@ class _HomePageState extends State<HomePage> {
                 style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold, color: Color(0xFF002131)),
               ),
               const SizedBox(height: 10),
-              SizedBox(
-                height: 200,
-                child: ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: videoTitles.length,
-                  itemBuilder: (BuildContext context, int index) {
-                    String videoTitle = videoTitles[index];
-
-                    return Padding(
-                      padding: const EdgeInsets.only(right: 10),
-                      child: SizedBox(
-                        width: 200, // Fixed width for each card
-                        child: Card(
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              ClipRRect(
-                                borderRadius: const BorderRadius.vertical(top: Radius.circular(4)),
-                                child: Image.asset(
-                                  profileIconAsset,
-                                  width: 200,
-                                  height: 120,
-                                  fit: BoxFit.cover,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.all(8.0),
-                                child: Text(
-                                  videoTitle,
-                                  maxLines: 2, // Limit the number of lines
-                                  overflow: TextOverflow.ellipsis, // Handle overflow
-                                  style: const TextStyle(
-                                    fontSize: 14,
-                                    fontWeight: FontWeight.bold,
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
-              ),
+              _loadingRecommendations
+                  ? const SizedBox(
+                      height: 200,
+                      child: Center(child: CircularProgressIndicator(color: Color(0xFF48A9A6))),
+                    )
+                  : RecommendationsCarousel(recommendations: _recommendations),
               const SizedBox(height: 20),
               const Text(
                 'Subjects',
@@ -304,7 +336,7 @@ class _HomePageState extends State<HomePage> {
               ),
               const SizedBox(height: 10),
               SizedBox(
-                height: 100,
+                height: 140,
                 child: ListView.builder(
                   scrollDirection: Axis.horizontal,
                   itemCount: subjectNames.length,
@@ -454,6 +486,11 @@ class _HomePageState extends State<HomePage> {
                   },
                   icon: const Icon(Icons.cloud_download_outlined),
                 ),
+                IconButton(
+                  tooltip: 'Nạp file .txt, .md',
+                  icon: const Icon(Icons.file_upload_outlined),
+                  onPressed: _importNotebookFromFile,
+                ),
               ],
             ),
             const Text(
@@ -509,33 +546,11 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildSubjectCard(String subjectName, int index) {
-    return Padding(
-      padding: const EdgeInsets.only(right: 10),
-      child: SizedBox(
-        width: 150,
-        child: Card(
-          color: Colors.grey[200], // Neutral color for the card background
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const Icon(
-                  Icons.book,
-                  size: 40,
-                  color: Color(0xFF48A9A6), // Adjust the book icon color
-                ),
-                const SizedBox(height: 8),
-                Text(
-                  subjectName,
-                  textAlign: TextAlign.center,
-                  style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                ),
-              ],
-            ),
-          ),
-        ),
-      ),
+    final urls = CourseUrls.urlsFor(subjectName);
+    return CourseCard(
+      subject: subjectName,
+      providerUrls: urls,
+      width: 140,
     );
   }
 }

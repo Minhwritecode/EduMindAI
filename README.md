@@ -73,64 +73,67 @@ Phân tích các mô hình tiêu điểm
 
 ---
 
-## Chạy ứng dụng Flutter
+## Hướng dẫn chạy toàn bộ dự án
 
-Lần đầu (hoặc sau khi clone), tạo `.env` ở thư mục gốc repo (cùng cấp `pubspec.yaml`) — Flutter bundle file này lúc build:
+Dự án gồm 3 phần chính cần chạy: **Huấn luyện mô hình AI (VARK)**, **Flask Backend**, và **Flutter Frontend (Client)**. Dưới đây là hướng dẫn thiết lập và chạy chi tiết.
 
+### 1. Thiết lập biến môi trường (.env)
+Tạo tệp `.env` ở thư mục gốc của dự án (cùng cấp với `pubspec.yaml`):
 ```bash
 cp .env.example .env
-# Điền GEMINI_API_KEY=... (và MONGO_URI nếu chỉ chạy Flask)
 ```
-
-```bash
-flutter pub get
-flutter run \
-  --dart-define=API_BASE_URL=http://127.0.0.1:5000 \
-  --dart-define=APP_USER_ID=minh
-```
-
-- **`GEMINI_API_KEY`:** đặt trong `.env` (khuyến nghị, cùng file với `MONGO_URI` cho Flask). `--dart-define=GEMINI_API_KEY=...` vẫn **ghi đè** `.env` khi cần.
-- **Android emulator** trỏ Flask trên máy host: `API_BASE_URL=http://10.0.2.2:5000`
-- **Chạy test:** `flutter test`
+Mở file `.env` vừa tạo và điền các khóa cần thiết:
+- `GEMINI_API_KEY`: Khóa API của Google Gemini (lấy từ Google AI Studio).
+- `MONGO_URI`: (Tùy chọn) Chuỗi kết nối MongoDB Atlas nếu bạn muốn lưu trữ dữ liệu trên đám mây. Nếu không điền, hệ thống sẽ tự động chuyển sang cơ sở dữ liệu SQLite cục bộ (`local_db.sqlite`).
 
 ---
 
-## Chạy backend (Flask)
+### 2. Thiết lập và chạy Backend & AI Model (Python)
 
+#### Bước 2.1: Tạo môi trường ảo và cài đặt thư viện phụ thuộc
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate   # Windows: .venv\Scripts\activate
+source .venv/bin/activate   # Trên Windows chạy: .venv\Scripts\activate
 pip install -r requirements.txt
-cp .env.example .env
+```
+*Lưu ý cho macOS hoặc khi gặp xung đột NumPy:*
+Nếu gặp lỗi NumPy 2.x hoặc thiếu thư viện bổ trợ cho Transformers Trainer, hãy cài đặt các phiên bản tương thích sau:
+```bash
+pip install torch==2.2.1 transformers==4.44.2 "numpy<2" accelerate
 ```
 
-Trong `.env` đặt `MONGO_URI=...` nếu dùng đồng bộ Mongo (notebook, hồ sơ, quiz, tasks; xem [MongoDB Atlas](https://www.mongodb.com/docs/atlas/getting-started/)). **Đặt file `.env` cùng thư mục với `app.py`** — Flask luôn nạp biến môi trường từ đó (kể cả khi bạn `cd` sang chỗ khác). Không commit `.env`.
+#### Bước 2.2: Huấn luyện mô hình học tập VARK (PyTorch)
+Trước khi chạy backend lần đầu, bạn cần huấn luyện mô hình phân loại phong cách học tập VARK bằng cách chạy script sau:
+```bash
+python scripts/train_vark_model.py --epochs 2
+```
+Sau khi hoàn tất, mô hình `learning_style_model.pt` và các cấu hình tokenizer sẽ được lưu ở thư mục gốc để Flask backend load khi khởi động.
 
+#### Bước 2.3: Khởi động Flask Backend
+Chạy server backend trên cổng mặc định `5000`:
 ```bash
 python app.py
 ```
+Server sẽ khởi chạy tại địa chỉ `http://127.0.0.1:5000`.
 
-**API chính**
+---
 
-| Phương thức | Đường dẫn | Mô tả |
-|-------------|-----------|--------|
-| `POST` | `/predictLearningStyle` | JSON `Question1` … `Question5` (1–5) → `learningStyle` |
-| `GET` | `/health` | `{ "ok", "mongo", "mongo_detail"?, "env_loaded_from"? }` |
-| `POST` | `/api/notebook-context` | Lưu `{ "userId", "text" }` |
-| `GET` | `/api/notebook-context?userId=...` | Lấy text notebook |
-| `GET` / `POST` | `/api/user-profile` | GET `?userId=` — hồ sơ (không có `passwordHash`); POST upsert `{ userId, displayName?, email?, password? }` (mật khẩu hash trên server nếu có) |
-| `GET` / `POST` | `/api/quiz-results` | GET `?userId=&quizType=vark&limit=20` — danh sách kết quả mới nhất; POST thêm bản ghi VARK `{ userId, quizType, learningStyle, payload? }` |
-| `GET` / `POST` | `/api/tasks` | GET `?userId=` → `{ tasks: [] }`; POST `{ userId, tasks: string[] }` — thay toàn bộ danh sách |
+### 3. Thiết lập và chạy Frontend (Flutter Client)
 
-Không có `MONGO_URI` thì các endpoint `/api/*` trên trả **503**; ML VARK vẫn chạy nếu có `learning_styles.csv`.
+#### Bước 3.1: Tải các gói thư viện phụ thuộc của Flutter
+```bash
+flutter pub get
+```
 
-### MongoDB / SSL (bắt tay TLS) — xử lý sự cố | Troubleshooting
-
-**Nguyên nhân thường gặp:** Python hoặc OpenSSL quá cũ; máy thiếu bundle CA tin cậy; VPN/proxy **SSL inspection** (MITM) làm chứng khác với CA mặc định; Atlas **Network Access** chưa cho phép IP hiện tại.
-
-**Cách xử lý:** Nâng **Python 3.10+**, tạo lại venv, chạy `pip install -U pymongo certifi`. Backend đã dùng **certifi** (`tlsCAFile` trong `app.py`) khi gói cài được. Trên Atlas: thêm IP / `0.0.0.0/0` (chỉ khi chấp nhận rủi ro) vào allowlist. Thử **tắt VPN** hoặc mạng khác để loại trừ proxy chặn TLS.
-
-**Common causes (EN):** old Python/OpenSSL, missing CA bundle, VPN/proxy TLS inspection, Atlas IP not allowlisted. **Fixes:** upgrade Python, recreate venv, `pip install -U pymongo certifi`, rely on certifi in the client (see `app.py`), fix Atlas network access, disable VPN for a quick test.
+#### Bước 3.2: Chạy ứng dụng Flutter
+Khởi chạy ứng dụng bằng lệnh:
+```bash
+flutter run \
+  --dart-define=API_BASE_URL=http://127.0.0.1:5000 \
+  --dart-define=APP_USER_ID=local
+```
+- **Android Emulator**: Nếu chạy ứng dụng trên máy ảo Android, hãy cấu hình API trỏ về IP loopback của máy chủ host: `--dart-define=API_BASE_URL=http://10.0.2.2:5000`.
+- **Chạy kiểm thử (Unit tests)**: `flutter test`
 
 ---
 
@@ -161,3 +164,9 @@ Không có `MONGO_URI` thì các endpoint `/api/*` trên trả **503**; ML VARK 
 
 - Màn **đăng nhập** gửi hồ sơ lên `/api/user-profile`, đặt `userId` trong app (email chữ thường nếu có, không thì slug từ tên), rồi vào Dashboard.
 - **Quiz trong Notebook** (sinh câu hỏi từ nội dung bạn dán) khác **quiz VARK** (gọi Flask); hai luồng độc lập.
+
+---
+
+## Tác giả / Authors
+
+**Copyright (c) 2026 Đinh Trần Tiến Minh | Phan Thanh Phúc | Hoàng Văn Đức**
