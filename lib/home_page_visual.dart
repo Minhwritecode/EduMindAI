@@ -86,7 +86,7 @@ class _HomePageState extends State<HomePage> {
           ScheduleAnalyzePage(),
         ],
       ),
-      floatingActionButton: FloatingActionButton.extended(
+      floatingActionButton: FloatingActionButton(
         onPressed: () {
           showDialog(
             context: context,
@@ -95,8 +95,8 @@ class _HomePageState extends State<HomePage> {
           );
         },
         backgroundColor: const Color(0xFF48A9A6),
-        icon: const Icon(Icons.timer, color: Colors.white),
-        label: const Text('Pomodoro', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+        tooltip: 'Pomodoro Timer',
+        child: const Icon(Icons.access_time, color: Colors.white),
       ),
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(

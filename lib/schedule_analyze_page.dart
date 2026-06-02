@@ -558,11 +558,14 @@ class _ScheduleAnalyzePageState extends State<ScheduleAnalyzePage> {
     }
 
     // Add new slot
-    var dayObj = _timetable.firstWhere((d) => d.dayOfWeek == targetDay, orElse: () {
-      final newDay = svc.TimetableDay(dayOfWeek: targetDay, slots: []);
-      _timetable.add(newDay);
-      return newDay;
-    });
+    var dayObj = _timetable.firstWhere(
+      (d) => d.dayOfWeek.toLowerCase() == targetDay.toLowerCase(),
+      orElse: () {
+        final newDay = svc.TimetableDay(dayOfWeek: targetDay, slots: []);
+        _timetable.add(newDay);
+        return newDay;
+      },
+    );
     dayObj.slots.add(newSlot);
 
     final userId = context.read<NotebookContextState>().userId;
@@ -576,7 +579,7 @@ class _ScheduleAnalyzePageState extends State<ScheduleAnalyzePage> {
   Future<void> _deleteSlot(String dayOfWeek, svc.TimeSlot slot) async {
     setState(() => _isLoading = true);
     
-    final dayObj = _timetable.firstWhere((d) => d.dayOfWeek == dayOfWeek);
+    final dayObj = _timetable.firstWhere((d) => d.dayOfWeek.toLowerCase() == dayOfWeek.toLowerCase());
     dayObj.slots.removeWhere((s) => s == slot);
 
     final userId = context.read<NotebookContextState>().userId;
@@ -727,6 +730,16 @@ class _ScheduleAnalyzePageState extends State<ScheduleAnalyzePage> {
             ),
           ),
           const SizedBox(width: 6),
+          // Add slot button
+          IconButton(
+            icon: const Icon(Icons.add, color: Color(0xFFE3E3E3)),
+            onPressed: () => _showSlotDialog(),
+            tooltip: 'Thêm lịch học',
+            style: IconButton.styleFrom(
+              backgroundColor: Colors.white.withOpacity(0.08),
+            ),
+          ),
+          const SizedBox(width: 6),
           // Toggle config button
           IconButton(
             icon: Icon(
@@ -748,11 +761,6 @@ class _ScheduleAnalyzePageState extends State<ScheduleAnalyzePage> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFF131314),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () => _showSlotDialog(),
-        backgroundColor: const Color(0xFF48A9A6),
-        child: const Icon(Icons.add, color: Colors.white),
-      ),
       body: _isLoading
           ? const Center(child: CircularProgressIndicator(color: Color(0xFF48A9A6)))
           : Row(
