@@ -3,6 +3,7 @@ import 'package:provider/provider.dart';
 import 'dart:async';
 import 'dart:math';
 import 'package:intl/intl.dart';
+import 'package:image_picker/image_picker.dart';
 
 import 'pomodoro_popup.dart';
 import 'my_learning_page.dart';
@@ -145,7 +146,7 @@ class _HomePageState extends State<HomePage> {
               children: [
                 CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('lib/assets/profile_icon.jpg')),
+                    backgroundImage: AssetImage('assets/image.png')),
                 SizedBox(height: 10),
                 Text('Tien Minh',
                     style: TextStyle(
@@ -191,11 +192,11 @@ class _DashboardViewState extends State<DashboardView> {
   ];
 
   final List<String> videoImageUrls = [
-    'https://th.bing.com/th/id/OIP.0STrpvtmnpiN8MxYI-xUPwAAAA?rs=1&pid=ImgDetMain',
-    'https://www.codewithharry.com/_next/image/?url=https:%2F%2Fcwh-full-next-space.fra1.digitaloceanspaces.com%2Fvideoseries%2Fultimate-js-tutorial-hindi-1%2FJS-Thumb.jpg&w=828&q=75',
-    'https://th.bing.com/th/id/OIP.raiOFsxSpMFzOFwa2TXUmQAAAA?rs=1&pid=ImgDetMain',
+    'https://i.ytimg.com/vi/kqtD5dpn9C8/maxresdefault.jpg',
+    'https://i.ytimg.com/vi/Q33KBiDriJY/maxresdefault.jpg',
+    'https://i.ytimg.com/vi/kqtD5dpn9C8/maxresdefault.jpg',
     'https://i.ytimg.com/vi/qTph1pj_rCo/maxresdefault.jpg',
-    'https://www.someurl.com/your-image4.jpg',
+    'https://i.ytimg.com/vi/Q33KBiDriJY/maxresdefault.jpg',
   ];
 
   final List<String> _quotes = [
@@ -213,6 +214,17 @@ class _DashboardViewState extends State<DashboardView> {
 
   final TextEditingController _taskController = TextEditingController();
   String? _selectedNotebookForTask;
+  XFile? _headerImage;
+
+  Future<void> _pickHeaderImage() async {
+    final ImagePicker picker = ImagePicker();
+    final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+    if (image != null) {
+      setState(() {
+        _headerImage = image;
+      });
+    }
+  }
 
   @override
   void initState() {
@@ -419,106 +431,141 @@ class _DashboardViewState extends State<DashboardView> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Container(
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFF131314),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white10),
-                ),
+        IntrinsicHeight(
+          child: Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // Left Column: Time & Latest Notebooks
+              Expanded(
+                flex: 3,
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    Text(
-                      DateFormat('hh:mm a').format(_currentTime),
-                      style: const TextStyle(
-                          fontSize: 32,
-                          fontWeight: FontWeight.bold,
-                          color: Color(0xFFE3E3E3)),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131314),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Text(
+                            DateFormat('hh:mm a').format(_currentTime),
+                            style: const TextStyle(
+                                fontSize: 32,
+                                fontWeight: FontWeight.bold,
+                                color: Color(0xFFE3E3E3)),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            DateFormat('EEEE, MMMM d').format(_currentTime),
+                            style: const TextStyle(
+                                fontSize: 16, color: Colors.white60),
+                          ),
+                        ],
+                      ),
                     ),
-                    const SizedBox(height: 4),
-                    Text(
-                      DateFormat('EEEE, MMMM d').format(_currentTime),
-                      style:
-                          const TextStyle(fontSize: 16, color: Colors.white60),
+                    const SizedBox(height: 16),
+                    const Align(
+                      alignment: Alignment.centerLeft,
+                      child: Text("Latest Notebooks",
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.bold,
+                              color: Color(0xFFE3E3E3))),
+                    ),
+                    const SizedBox(height: 8),
+                    SizedBox(
+                      height: 100,
+                      child: _notebooks.isEmpty
+                          ? const Center(
+                              child: Text("No notebooks yet.",
+                                  style: TextStyle(color: Colors.white38)))
+                          : ListView.builder(
+                              scrollDirection: Axis.horizontal,
+                              itemCount: min(3, _notebooks.length),
+                              itemBuilder: (context, index) {
+                                final nb = _notebooks[index];
+                                return Container(
+                                  width: 140,
+                                  margin: const EdgeInsets.only(right: 12),
+                                  child: Material(
+                                    color: const Color(0xFF48A9A6)
+                                        .withOpacity(0.1),
+                                    borderRadius: BorderRadius.circular(8),
+                                    child: InkWell(
+                                      borderRadius: BorderRadius.circular(8),
+                                      onTap: () => _openNotebookById(nb.id),
+                                      child: Padding(
+                                        padding: const EdgeInsets.all(12.0),
+                                        child: Center(
+                                          child: Text(
+                                            nb.title,
+                                            maxLines: 2,
+                                            textAlign: TextAlign.center,
+                                            overflow: TextOverflow.ellipsis,
+                                            style: const TextStyle(
+                                                fontWeight: FontWeight.bold,
+                                                color: Color(0xFF48A9A6)),
+                                          ),
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                );
+                              },
+                            ),
                     ),
                   ],
                 ),
               ),
-            ),
-            const SizedBox(width: 16),
-            Expanded(
-              child: Container(
-                height: 120,
-                decoration: BoxDecoration(
-                  color: const Color(0xFF131314),
-                  borderRadius: BorderRadius.circular(12),
-                  border: Border.all(color: Colors.white10),
-                ),
-                child: const Center(
-                  child: Text(
-                    "Image Placeholder\n(To be uploaded)",
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                        color: Colors.white38, fontWeight: FontWeight.w500),
+              const SizedBox(width: 16),
+              // Right Column: Image Placeholder
+              Expanded(
+                flex: 2,
+                child: Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: _pickHeaderImage,
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      decoration: BoxDecoration(
+                        color: const Color(0xFF131314),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.white10),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: _headerImage != null
+                          ? Image.network(
+                              _headerImage!.path,
+                              fit: BoxFit.cover,
+                            )
+                          : const Center(
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add_photo_alternate_outlined,
+                                      color: Colors.white38, size: 32),
+                                  SizedBox(height: 8),
+                                  Text(
+                                    "Add Picture",
+                                    style: TextStyle(
+                                        color: Colors.white38,
+                                        fontWeight: FontWeight.w500),
+                                  ),
+                                ],
+                              ),
+                            ),
+                    ),
                   ),
                 ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 16),
-        const Align(
-          alignment: Alignment.centerLeft,
-          child: Text("Latest Notebooks",
-              style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                  color: Color(0xFFE3E3E3))),
-        ),
-        const SizedBox(height: 8),
-        SizedBox(
-          height: 100,
-          child: _notebooks.isEmpty
-              ? const Center(
-                  child: Text("No notebooks yet.",
-                      style: TextStyle(color: Colors.white38)))
-              : ListView.builder(
-                  scrollDirection: Axis.horizontal,
-                  itemCount: min(5, _notebooks.length),
-                  itemBuilder: (context, index) {
-                    final nb = _notebooks[index];
-                    return Container(
-                      width: 140,
-                      margin: const EdgeInsets.only(right: 12),
-                      child: Material(
-                        color: const Color(0xFF48A9A6).withOpacity(0.1),
-                        borderRadius: BorderRadius.circular(8),
-                        child: InkWell(
-                          borderRadius: BorderRadius.circular(8),
-                          onTap: () => _openNotebookById(nb.id),
-                          child: Padding(
-                            padding: const EdgeInsets.all(12.0),
-                            child: Center(
-                              child: Text(
-                                nb.title,
-                                maxLines: 2,
-                                textAlign: TextAlign.center,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                    fontWeight: FontWeight.bold,
-                                    color: Color(0xFF48A9A6)),
-                              ),
-                            ),
-                          ),
-                        ),
-                      ),
-                    );
-                  },
-                ),
+            ],
+          ),
         ),
       ],
     );
