@@ -49,8 +49,7 @@ dependencies:
   flutter_dotenv: ^6.0.1
   shared_preferences: ^2.5.5
   audioplayers: ^6.0.0
-  kalender:
-    path: ./kalender
+  kalender: any
 
 dev_dependencies:
   flutter_test:

@@ -55,10 +55,14 @@ class _HomePageState extends State<HomePage> {
 
   String _getAppBarTitle() {
     switch (_selectedIndex) {
-      case 0: return 'PMDEduMind Dashboard';
-      case 1: return 'My Learning';
-      case 2: return 'Thời Khóa Biểu';
-      default: return 'PMDEduMind';
+      case 0:
+        return 'PMDEduMind Dashboard';
+      case 1:
+        return 'My Learning';
+      case 2:
+        return 'Thời Khóa Biểu';
+      default:
+        return 'PMDEduMind';
     }
   }
 
@@ -68,7 +72,9 @@ class _HomePageState extends State<HomePage> {
       appBar: AppBar(
         backgroundColor: const Color(0xFF131314),
         elevation: 0,
-        title: Text(_getAppBarTitle(), style: const TextStyle(color: Color(0xFFE3E3E3), fontWeight: FontWeight.bold)),
+        title: Text(_getAppBarTitle(),
+            style: const TextStyle(
+                color: Color(0xFFE3E3E3), fontWeight: FontWeight.bold)),
         iconTheme: const IconThemeData(color: Color(0xFFE3E3E3)),
         bottom: PreferredSize(
           preferredSize: const Size.fromHeight(1.0),
@@ -86,18 +92,22 @@ class _HomePageState extends State<HomePage> {
           ScheduleAnalyzePage(),
         ],
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          showDialog(
-            context: context,
-            barrierDismissible: false,
-            builder: (context) => const PomodoroPopup(),
-          );
-        },
-        backgroundColor: const Color(0xFF48A9A6),
-        tooltip: 'Pomodoro Timer',
-        child: const Icon(Icons.access_time, color: Colors.white),
-      ),
+      floatingActionButton: _selectedIndex == 0
+          ? FloatingActionButton.extended(
+              onPressed: () {
+                showDialog(
+                  context: context,
+                  barrierDismissible: false,
+                  builder: (context) => const PomodoroPopup(),
+                );
+              },
+              backgroundColor: const Color(0xFF48A9A6),
+              icon: const Icon(Icons.timer, color: Colors.white),
+              label: const Text('Pomodoro',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.bold)),
+            )
+          : null,
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
           border: Border(top: BorderSide(color: Colors.white10, width: 1.0)),
@@ -110,9 +120,12 @@ class _HomePageState extends State<HomePage> {
           unselectedItemColor: Colors.grey.shade600,
           type: BottomNavigationBarType.fixed,
           items: const [
-            BottomNavigationBarItem(icon: Icon(Icons.dashboard), label: 'Dashboard'),
-            BottomNavigationBarItem(icon: Icon(Icons.book), label: 'My Learning'),
-            BottomNavigationBarItem(icon: Icon(Icons.calendar_today), label: 'My schedule'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.dashboard), label: 'Dashboard'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.book), label: 'My Learning'),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.calendar_today), label: 'My schedule'),
           ],
         ),
       ),
@@ -130,14 +143,26 @@ class _HomePageState extends State<HomePage> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                CircleAvatar(radius: 40, backgroundImage: AssetImage('lib/assets/profile_icon.jpg')),
+                CircleAvatar(
+                    radius: 40,
+                    backgroundImage: AssetImage('lib/assets/profile_icon.jpg')),
                 SizedBox(height: 10),
-                Text('Tien Minh', style: TextStyle(color: Color(0xFFE3E3E3), fontSize: 18, fontWeight: FontWeight.bold)),
+                Text('Tien Minh',
+                    style: TextStyle(
+                        color: Color(0xFFE3E3E3),
+                        fontSize: 18,
+                        fontWeight: FontWeight.bold)),
               ],
             ),
           ),
-          ListTile(title: const Text('Cài đặt', style: TextStyle(color: Color(0xFFE3E3E3))), onTap: () {}),
-          ListTile(title: const Text('Hỏi đáp (FAQ)', style: TextStyle(color: Color(0xFFE3E3E3))), onTap: () {}),
+          ListTile(
+              title: const Text('Cài đặt',
+                  style: TextStyle(color: Color(0xFFE3E3E3))),
+              onTap: () {}),
+          ListTile(
+              title: const Text('Hỏi đáp (FAQ)',
+                  style: TextStyle(color: Color(0xFFE3E3E3))),
+              onTap: () {}),
         ],
       ),
     );
@@ -193,7 +218,7 @@ class _DashboardViewState extends State<DashboardView> {
   void initState() {
     super.initState();
     _currentQuote = _quotes[Random().nextInt(_quotes.length)];
-    
+
     _timer = Timer.periodic(const Duration(minutes: 1), (Timer t) {
       if (mounted) setState(() => _currentTime = DateTime.now());
     });
@@ -211,14 +236,15 @@ class _DashboardViewState extends State<DashboardView> {
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     final userId = context.read<NotebookContextState>().userId;
-    
+
     final (schedule, _) = await svc.ScheduleService.fetchSchedule(userId);
     if (schedule != null) {
       _timetable = schedule.timetable;
       _todoList = schedule.todoList;
     }
 
-    final (notebooks, _) = await nb_sync.NotebookMongoSync.fetchNotebooks(userId);
+    final (notebooks, _) =
+        await nb_sync.NotebookMongoSync.fetchNotebooks(userId);
     if (notebooks != null) {
       _notebooks = notebooks;
     }
@@ -242,14 +268,16 @@ class _DashboardViewState extends State<DashboardView> {
     );
 
     setState(() => _isLoading = true);
-    final (taskId, err) = await svc.ScheduleService.addOrUpdateTodo(userId, task);
-    
+    final (taskId, err) =
+        await svc.ScheduleService.addOrUpdateTodo(userId, task);
+
     if (err == null && taskId != null) {
       _taskController.clear();
       _selectedNotebookForTask = null;
       await _loadData();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi thêm task: $err')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Lỗi thêm task: $err')));
       setState(() => _isLoading = false);
     }
   }
@@ -261,7 +289,8 @@ class _DashboardViewState extends State<DashboardView> {
     if (err == null) {
       await _loadData();
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text('Lỗi xóa task: $err')));
+      ScaffoldMessenger.of(context)
+          .showSnackBar(SnackBar(content: Text('Lỗi xóa task: $err')));
       setState(() => _isLoading = false);
     }
   }
@@ -281,7 +310,8 @@ class _DashboardViewState extends State<DashboardView> {
   }
 
   void _openNotebookById(String id) {
-    final nb = _notebooks.firstWhere((n) => n.id == id, orElse: () => nb_sync.Notebook(id: id, title: 'Notebook', text: ''));
+    final nb = _notebooks.firstWhere((n) => n.id == id,
+        orElse: () => nb_sync.Notebook(id: id, title: 'Notebook', text: ''));
     Navigator.push(
       context,
       MaterialPageRoute(builder: (context) => NotebookDetailPage(notebook: nb)),
@@ -291,7 +321,8 @@ class _DashboardViewState extends State<DashboardView> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator(color: Color(0xFF48A9A6)));
+      return const Center(
+          child: CircularProgressIndicator(color: Color(0xFF48A9A6)));
     }
 
     return LayoutBuilder(
@@ -301,7 +332,8 @@ class _DashboardViewState extends State<DashboardView> {
           return Padding(
             padding: const EdgeInsets.all(16.0),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.stretch, // Makes children fill vertical space
+              crossAxisAlignment: CrossAxisAlignment
+                  .stretch, // Makes children fill vertical space
               children: [
                 Expanded(flex: 3, child: _buildLeftColumn(isFixed: true)),
                 const SizedBox(width: 16),
@@ -402,12 +434,16 @@ class _DashboardViewState extends State<DashboardView> {
                   children: [
                     Text(
                       DateFormat('hh:mm a').format(_currentTime),
-                      style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3)),
+                      style: const TextStyle(
+                          fontSize: 32,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFFE3E3E3)),
                     ),
                     const SizedBox(height: 4),
                     Text(
                       DateFormat('EEEE, MMMM d').format(_currentTime),
-                      style: const TextStyle(fontSize: 16, color: Colors.white60),
+                      style:
+                          const TextStyle(fontSize: 16, color: Colors.white60),
                     ),
                   ],
                 ),
@@ -426,7 +462,8 @@ class _DashboardViewState extends State<DashboardView> {
                   child: Text(
                     "Image Placeholder\n(To be uploaded)",
                     textAlign: TextAlign.center,
-                    style: TextStyle(color: Colors.white38, fontWeight: FontWeight.w500),
+                    style: TextStyle(
+                        color: Colors.white38, fontWeight: FontWeight.w500),
                   ),
                 ),
               ),
@@ -436,44 +473,52 @@ class _DashboardViewState extends State<DashboardView> {
         const SizedBox(height: 16),
         const Align(
           alignment: Alignment.centerLeft,
-          child: Text("Latest Notebooks", style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+          child: Text("Latest Notebooks",
+              style: TextStyle(
+                  fontSize: 16,
+                  fontWeight: FontWeight.bold,
+                  color: Color(0xFFE3E3E3))),
         ),
         const SizedBox(height: 8),
         SizedBox(
           height: 100,
-          child: _notebooks.isEmpty 
-            ? const Center(child: Text("No notebooks yet.", style: TextStyle(color: Colors.white38)))
-            : ListView.builder(
-                scrollDirection: Axis.horizontal,
-                itemCount: min(5, _notebooks.length),
-                itemBuilder: (context, index) {
-                  final nb = _notebooks[index];
-                  return Container(
-                    width: 140,
-                    margin: const EdgeInsets.only(right: 12),
-                    child: Material(
-                      color: const Color(0xFF48A9A6).withOpacity(0.1),
-                      borderRadius: BorderRadius.circular(8),
-                      child: InkWell(
+          child: _notebooks.isEmpty
+              ? const Center(
+                  child: Text("No notebooks yet.",
+                      style: TextStyle(color: Colors.white38)))
+              : ListView.builder(
+                  scrollDirection: Axis.horizontal,
+                  itemCount: min(5, _notebooks.length),
+                  itemBuilder: (context, index) {
+                    final nb = _notebooks[index];
+                    return Container(
+                      width: 140,
+                      margin: const EdgeInsets.only(right: 12),
+                      child: Material(
+                        color: const Color(0xFF48A9A6).withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
-                        onTap: () => _openNotebookById(nb.id),
-                        child: Padding(
-                          padding: const EdgeInsets.all(12.0),
-                          child: Center(
-                            child: Text(
-                              nb.title, 
-                              maxLines: 2, 
-                              textAlign: TextAlign.center,
-                              overflow: TextOverflow.ellipsis,
-                              style: const TextStyle(fontWeight: FontWeight.bold, color: Color(0xFF48A9A6)),
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(8),
+                          onTap: () => _openNotebookById(nb.id),
+                          child: Padding(
+                            padding: const EdgeInsets.all(12.0),
+                            child: Center(
+                              child: Text(
+                                nb.title,
+                                maxLines: 2,
+                                textAlign: TextAlign.center,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    color: Color(0xFF48A9A6)),
+                              ),
                             ),
                           ),
                         ),
                       ),
-                    ),
-                  );
-                },
-              ),
+                    );
+                  },
+                ),
         ),
       ],
     );
@@ -506,7 +551,11 @@ class _DashboardViewState extends State<DashboardView> {
             Text(
               _currentQuote,
               textAlign: TextAlign.center,
-              style: const TextStyle(fontSize: 16, fontStyle: FontStyle.italic, color: Color(0xFFE3E3E3), height: 1.5),
+              style: const TextStyle(
+                  fontSize: 16,
+                  fontStyle: FontStyle.italic,
+                  color: Color(0xFFE3E3E3),
+                  height: 1.5),
             ),
           ],
         ),
@@ -527,7 +576,11 @@ class _DashboardViewState extends State<DashboardView> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            const Text('Recommended Courses', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            const Text('Recommended Courses',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE3E3E3))),
             const SizedBox(height: 12),
             Expanded(
               flex: 1,
@@ -547,17 +600,24 @@ class _DashboardViewState extends State<DashboardView> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         ClipRRect(
-                          borderRadius: const BorderRadius.vertical(top: Radius.circular(11)),
-                          child: Image.network(videoImageUrls[index], height: 90, width: double.infinity, fit: BoxFit.cover),
+                          borderRadius: const BorderRadius.vertical(
+                              top: Radius.circular(11)),
+                          child: Image.network(videoImageUrls[index],
+                              height: 90,
+                              width: double.infinity,
+                              fit: BoxFit.cover),
                         ),
                         Expanded(
                           child: Padding(
                             padding: const EdgeInsets.all(8.0),
                             child: Text(
-                              videoTitles[index], 
-                              maxLines: 2, 
-                              overflow: TextOverflow.ellipsis, 
-                              style: const TextStyle(fontSize: 12, fontWeight: FontWeight.w600, color: Color(0xFFE3E3E3)),
+                              videoTitles[index],
+                              maxLines: 2,
+                              overflow: TextOverflow.ellipsis,
+                              style: const TextStyle(
+                                  fontSize: 12,
+                                  fontWeight: FontWeight.w600,
+                                  color: Color(0xFFE3E3E3)),
                             ),
                           ),
                         ),
@@ -575,7 +635,8 @@ class _DashboardViewState extends State<DashboardView> {
 
   Widget _buildTimetableBlock({required bool isFixed}) {
     final today = DateFormat('EEEE').format(DateTime.now());
-    final dayData = _timetable.firstWhere((d) => d.dayOfWeek == today, orElse: () => svc.TimetableDay(dayOfWeek: today, slots: []));
+    final dayData = _timetable.firstWhere((d) => d.dayOfWeek == today,
+        orElse: () => svc.TimetableDay(dayOfWeek: today, slots: []));
     final slots = dayData.slots;
 
     final content = Column(
@@ -584,68 +645,84 @@ class _DashboardViewState extends State<DashboardView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('Timetable (Today)', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            const Text('Timetable (Today)',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE3E3E3))),
             TextButton(
-              onPressed: () {
-                // To switch page we would need a callback, or rely on them swiping.
-                // For now, doing nothing.
-              }, 
-              child: const Text("View All", style: TextStyle(color: Color(0xFF48A9A6)))
-            ),
+                onPressed: () {
+                  // To switch page we would need a callback, or rely on them swiping.
+                  // For now, doing nothing.
+                },
+                child: const Text("View All",
+                    style: TextStyle(color: Color(0xFF48A9A6)))),
           ],
         ),
         const SizedBox(height: 12),
         if (slots.isEmpty)
           const Expanded(
             flex: 1,
-            child: Center(child: Text("No classes today! Relax.", style: TextStyle(color: Colors.white38))),
+            child: Center(
+                child: Text("No classes today! Relax.",
+                    style: TextStyle(color: Colors.white38))),
           )
         else
           Expanded(
             flex: 1,
             child: ListView.builder(
-              itemCount: slots.length,
-              itemBuilder: (context, index) {
-                final slot = slots[index];
-                return Container(
-                  margin: const EdgeInsets.only(bottom: 12),
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFF131314),
-                    border: Border.all(color: const Color(0xFF48A9A6).withOpacity(0.3)),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Row(
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFF48A9A6),
-                          borderRadius: BorderRadius.circular(6),
+                itemCount: slots.length,
+                itemBuilder: (context, index) {
+                  final slot = slots[index];
+                  return Container(
+                    margin: const EdgeInsets.only(bottom: 12),
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF131314),
+                      border: Border.all(
+                          color: const Color(0xFF48A9A6).withOpacity(0.3)),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Row(
+                      children: [
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF48A9A6),
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '${slot.startTime}',
+                            style: const TextStyle(
+                                color: Colors.white,
+                                fontWeight: FontWeight.bold,
+                                fontSize: 12),
+                          ),
                         ),
-                        child: Text(
-                          '${slot.startTime}',
-                          style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 12),
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(slot.subject, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14, color: Color(0xFFE3E3E3))),
-                            if (slot.roomOrLink.isNotEmpty) ...[
-                              const SizedBox(height: 4),
-                              Text(slot.roomOrLink, style: const TextStyle(color: Colors.white60, fontSize: 12)),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(slot.subject,
+                                  style: const TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 14,
+                                      color: Color(0xFFE3E3E3))),
+                              if (slot.roomOrLink.isNotEmpty) ...[
+                                const SizedBox(height: 4),
+                                Text(slot.roomOrLink,
+                                    style: const TextStyle(
+                                        color: Colors.white60, fontSize: 12)),
+                              ],
                             ],
-                          ],
+                          ),
                         ),
-                      ),
-                    ],
-                  ),
-                );
-              }
-            ),
+                      ],
+                    ),
+                  );
+                }),
           ),
       ],
     );
@@ -672,7 +749,8 @@ class _DashboardViewState extends State<DashboardView> {
           builder: (context, setDialogState) {
             return AlertDialog(
               backgroundColor: const Color(0xFF1E1F22),
-              title: const Text('Thêm Nhiệm Vụ', style: TextStyle(color: Color(0xFFE3E3E3))),
+              title: const Text('Thêm Nhiệm Vụ',
+                  style: TextStyle(color: Color(0xFFE3E3E3))),
               content: Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -682,8 +760,10 @@ class _DashboardViewState extends State<DashboardView> {
                     decoration: const InputDecoration(
                       hintText: 'Nhập nhiệm vụ mới...',
                       hintStyle: TextStyle(color: Colors.white38),
-                      enabledBorder: UnderlineInputBorder(borderSide: BorderSide(color: Colors.white10)),
-                      focusedBorder: UnderlineInputBorder(borderSide: BorderSide(color: Color(0xFF48A9A6))),
+                      enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Colors.white10)),
+                      focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(color: Color(0xFF48A9A6))),
                     ),
                     autofocus: true,
                   ),
@@ -691,20 +771,32 @@ class _DashboardViewState extends State<DashboardView> {
                   DropdownButton<String>(
                     isExpanded: true,
                     dropdownColor: const Color(0xFF1E1F22),
-                    hint: const Text('Liên kết Notebook (Tùy chọn)', style: TextStyle(fontSize: 12, color: Colors.white60)),
+                    hint: const Text('Liên kết Notebook (Tùy chọn)',
+                        style: TextStyle(fontSize: 12, color: Colors.white60)),
                     value: _selectedNotebookForTask,
-                    items: _notebooks.map((nb) => DropdownMenuItem(value: nb.id, child: Text(nb.title, maxLines: 1, overflow: TextOverflow.ellipsis, style: const TextStyle(fontSize: 12, color: Color(0xFFE3E3E3))))).toList(),
-                    onChanged: (v) => setDialogState(() => _selectedNotebookForTask = v),
+                    items: _notebooks
+                        .map((nb) => DropdownMenuItem(
+                            value: nb.id,
+                            child: Text(nb.title,
+                                maxLines: 1,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                    fontSize: 12, color: Color(0xFFE3E3E3)))))
+                        .toList(),
+                    onChanged: (v) =>
+                        setDialogState(() => _selectedNotebookForTask = v),
                   ),
                 ],
               ),
               actions: [
                 TextButton(
                   onPressed: () => Navigator.pop(context),
-                  child: const Text('Hủy', style: TextStyle(color: Colors.grey)),
+                  child:
+                      const Text('Hủy', style: TextStyle(color: Colors.grey)),
                 ),
                 FilledButton(
-                  style: FilledButton.styleFrom(backgroundColor: const Color(0xFF48A9A6)),
+                  style: FilledButton.styleFrom(
+                      backgroundColor: const Color(0xFF48A9A6)),
                   onPressed: () async {
                     if (_taskController.text.trim().isEmpty) return;
                     Navigator.pop(context);
@@ -727,68 +819,85 @@ class _DashboardViewState extends State<DashboardView> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            const Text('To Do List', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE3E3E3))),
+            const Text('To Do List',
+                style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFFE3E3E3))),
             IconButton(
-              icon: const Icon(Icons.add_circle_outline, color: Color(0xFF48A9A6)),
+              icon: const Icon(Icons.add_circle_outline,
+                  color: Color(0xFF48A9A6)),
               onPressed: _showAddTaskDialog,
             ),
           ],
         ),
         const SizedBox(height: 4),
-        
         _todoList.isEmpty
-          ? const Expanded(
-              flex: 1,
-              child: Center(child: Text('Không có nhiệm vụ nào! Thư giãn thôi.', style: TextStyle(color: Colors.white38))),
-            )
-          : Expanded(
-              flex: 1,
-              child: ListView.builder(
-                itemCount: _todoList.length,
-                itemBuilder: (context, index) {
-                  final task = _todoList[index];
-                  final isLinked = task.notebookId.isNotEmpty;
-                  return Container(
-                    margin: const EdgeInsets.only(bottom: 8),
-                    decoration: BoxDecoration(
-                      color: task.isCompleted ? const Color(0xFF131314).withOpacity(0.5) : const Color(0xFF131314),
-                      border: Border.all(color: Colors.white10),
-                      borderRadius: BorderRadius.circular(12),
-                    ),
-                    child: ListTile(
-                      contentPadding: const EdgeInsets.symmetric(horizontal: 8),
-                      leading: Checkbox(
-                        value: task.isCompleted,
-                        activeColor: const Color(0xFF48A9A6),
-                        checkColor: Colors.white,
-                        onChanged: (_) => _toggleTaskCompletion(task),
+            ? const Expanded(
+                flex: 1,
+                child: Center(
+                    child: Text('Không có nhiệm vụ nào! Thư giãn thôi.',
+                        style: TextStyle(color: Colors.white38))),
+              )
+            : Expanded(
+                flex: 1,
+                child: ListView.builder(
+                  itemCount: _todoList.length,
+                  itemBuilder: (context, index) {
+                    final task = _todoList[index];
+                    final isLinked = task.notebookId.isNotEmpty;
+                    return Container(
+                      margin: const EdgeInsets.only(bottom: 8),
+                      decoration: BoxDecoration(
+                        color: task.isCompleted
+                            ? const Color(0xFF131314).withOpacity(0.5)
+                            : const Color(0xFF131314),
+                        border: Border.all(color: Colors.white10),
+                        borderRadius: BorderRadius.circular(12),
                       ),
-                      title: Text(
-                        task.title,
-                        style: TextStyle(
-                          decoration: task.isCompleted ? TextDecoration.lineThrough : null,
-                          color: task.isCompleted ? Colors.white38 : const Color(0xFFE3E3E3),
-                          fontSize: 14,
+                      child: ListTile(
+                        contentPadding:
+                            const EdgeInsets.symmetric(horizontal: 8),
+                        leading: Checkbox(
+                          value: task.isCompleted,
+                          activeColor: const Color(0xFF48A9A6),
+                          checkColor: Colors.white,
+                          onChanged: (_) => _toggleTaskCompletion(task),
+                        ),
+                        title: Text(
+                          task.title,
+                          style: TextStyle(
+                            decoration: task.isCompleted
+                                ? TextDecoration.lineThrough
+                                : null,
+                            color: task.isCompleted
+                                ? Colors.white38
+                                : const Color(0xFFE3E3E3),
+                            fontSize: 14,
+                          ),
+                        ),
+                        subtitle: isLinked
+                            ? GestureDetector(
+                                onTap: () => _openNotebookById(task.notebookId),
+                                child: const Text(
+                                  '🔗 Xem tài liệu liên kết',
+                                  style: TextStyle(
+                                      color: Color(0xFF48A9A6),
+                                      fontWeight: FontWeight.bold,
+                                      fontSize: 11),
+                                ),
+                              )
+                            : null,
+                        trailing: IconButton(
+                          icon: const Icon(Icons.delete_outline,
+                              color: Colors.red, size: 20),
+                          onPressed: () => _deleteTask(task.taskId),
                         ),
                       ),
-                      subtitle: isLinked 
-                        ? GestureDetector(
-                            onTap: () => _openNotebookById(task.notebookId),
-                            child: const Text(
-                              '🔗 Xem tài liệu liên kết',
-                              style: TextStyle(color: Color(0xFF48A9A6), fontWeight: FontWeight.bold, fontSize: 11),
-                            ),
-                          )
-                        : null,
-                      trailing: IconButton(
-                        icon: const Icon(Icons.delete_outline, color: Colors.red, size: 20),
-                        onPressed: () => _deleteTask(task.taskId),
-                      ),
-                    ),
-                  );
-                },
+                    );
+                  },
+                ),
               ),
-            ),
       ],
     );
 

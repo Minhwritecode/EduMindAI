@@ -61,9 +61,10 @@ EduMindAI is a smart, context-grounded learning ecosystem built with **Flutter**
    MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/?retryWrites=true&w=majority
    GEMINI_API_KEY=your_gemini_api_key_here
    ```
-5. Run the backend server:
+5. Go back to the root directory and run the backend server:
    ```bash
-   uvicorn main:app --port 5000 --reload
+   cd ..
+   uvicorn server.main:app --port 5000 --reload
    ```
    *The server will start at `http://127.0.0.1:5000` or `http://localhost:5000`.*
 
@@ -80,11 +81,11 @@ EduMindAI is a smart, context-grounded learning ecosystem built with **Flutter**
    API_BASE_URL=http://127.0.0.1:5000
    ```
    *(Note: If you are running on an Android Emulator, use `http://10.0.2.2:5000` instead of `127.0.0.1`)*
-4. Run the Flutter app:
+4. Run the Flutter app on a web server:
    ```bash
-   flutter run
+   flutter run -d web-server
    ```
-   *(We recommend running on Desktop or Web to experience the fixed-height dashboard layout.)*
+   *(We recommend running on Web to experience the fixed-height dashboard layout.)*
 
 ---
 
