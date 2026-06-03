@@ -213,7 +213,7 @@ class _QuizScreenState extends State<QuizScreen> {
       body: Container(
         decoration: const BoxDecoration(
           image: DecorationImage(
-            image: AssetImage(profileIconAsset),
+            image: AssetImage(learningStyleBgAsset),
             fit: BoxFit.cover,
           ),
         ),

@@ -95,6 +95,7 @@ Mở file `.env` vừa tạo và điền các khóa cần thiết:
 python3 -m venv .venv
 source .venv/bin/activate   # Trên Windows chạy: .venv\Scripts\activate
 pip install -r requirements.txt
+pip install pyyaml joblib cython
 ```
 *Lưu ý cho macOS hoặc khi gặp xung đột NumPy:*
 Nếu gặp lỗi NumPy 2.x hoặc thiếu thư viện bổ trợ cho Transformers Trainer, hãy cài đặt các phiên bản tương thích sau:
@@ -109,12 +110,35 @@ python scripts/train_vark_model.py --epochs 2
 ```
 Sau khi hoàn tất, mô hình `learning_style_model.pt` và các cấu hình tokenizer sẽ được lưu ở thư mục gốc để Flask backend load khi khởi động.
 
-#### Bước 2.3: Khởi động Flask Backend
+#### Bước 2.3: Di chuyển dữ liệu sang SQLite & Huấn luyện mô hình gợi ý Hybrid
+Để khởi chạy hệ thống gợi ý khóa học thông minh sử dụng thuật toán Hợp tác lọc lai (Hybrid Collaborative Filtering):
+1. **Di chuyển dữ liệu CSV sang SQLite DB (có đánh chỉ mục tối ưu)**:
+   ```bash
+   python scripts/migrate_csv_to_sqlite.py
+   ```
+2. **Huấn luyện mô hình Hybrid Recommender**:
+   ```bash
+   python scripts/train_lightfm.py
+   ```
+Các file cơ sở dữ liệu `data/recommendations.db` và tệp tin mô hình đã huấn luyện `data/model/lightfm.pkl` sẽ được tạo và nạp tự động bởi Flask backend.
+
+#### Bước 2.4: Khởi động Flask Backend & Trang Quản trị Đề xuất
 Chạy server backend trên cổng mặc định `5000`:
 ```bash
 python app.py
 ```
 Server sẽ khởi chạy tại địa chỉ `http://127.0.0.1:5000`.
+
+* **Trang quản trị đề xuất trực quan (Admin Dashboard Panel)**:
+  Truy cập địa chỉ: [http://127.0.0.1:5000/admin/recommendations](http://127.0.0.1:5000/admin/recommendations)
+  - Đăng nhập Basic Auth bằng tài khoản mặc định: **username**: `admin` / **password**: `admin123` (Cấu hình này có thể thay đổi trong tệp `data/recommendation_config.yaml`).
+  - Giao diện cung cấp khả năng điều chỉnh trọng số đề xuất trực quan bằng thanh trượt, re-train mô hình ngay trên web và xem live logs.
+
+#### Bước 2.5: Chạy các kiểm thử (Unit tests) của Backend
+Bạn có thể chạy các tệp tin test sử dụng `pytest`:
+```bash
+PYTHONPATH=. pytest
+```
 
 ---
 

@@ -22,6 +22,7 @@ import 'settings_page.dart';
 import 'widgets/glass_card.dart';
 import 'data/course_urls.dart';
 import 'theme/app_theme.dart';
+import 'const.dart' show learnerAvatarAsset;
 
 class HomePage extends StatefulWidget {
   const HomePage({super.key});
@@ -214,7 +215,7 @@ class _HomePageState extends State<HomePage> {
                 children: [
                   const CircleAvatar(
                     radius: 40,
-                    backgroundImage: AssetImage('lib/assets/generated_avatar.png'),
+                    backgroundImage: AssetImage(learnerAvatarAsset),
                   ),
                   const SizedBox(height: 10),
                   Text(

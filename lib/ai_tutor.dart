@@ -6,7 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:smart_learning_application/const.dart'
-    show geminiGenerationModel, profileIconAsset;
+    show aiTutorBgAsset, geminiGenerationModel;
 import 'package:smart_learning_application/gemini_helpers.dart';
 import 'package:smart_learning_application/widgets/tts_button.dart';
 
@@ -58,7 +58,7 @@ class _AiTutorPageState extends State<AiTutorPage> {
     return Container(
       decoration: const BoxDecoration(
         image: DecorationImage(
-          image: AssetImage(profileIconAsset),
+          image: AssetImage(aiTutorBgAsset),
           fit: BoxFit.cover,
         ),
       ),

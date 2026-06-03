@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'const.dart' show profileIconAsset;
+import 'const.dart' show signupHeroAsset;
 import 'login_page.dart';
 
 class SignUpPage extends StatefulWidget {
@@ -23,7 +23,7 @@ class _SignUpPageState extends State<SignUpPage> {
             children: <Widget>[
               const SizedBox(height: 50), // Adjusted height to make space for the image
               Image.asset(
-                profileIconAsset,
+                signupHeroAsset,
                 width: double.infinity,
                 height: 300,
                 fit: BoxFit.cover,

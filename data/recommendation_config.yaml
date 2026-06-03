@@ -1,0 +1,18 @@
+model:
+  type: lightfm          # options: lightfm | als | torch
+  path: data/model/lightfm.pkl
+weights:
+  collaborative: 0.5
+  style_boost: 0.8
+  already_seen_penalty: 2.0
+pagination:
+  default_limit: 5
+  max_limit: 50
+logging:
+  level: INFO
+  file: logs/recommendations.log
+admin_demo:
+  enabled: true
+  auth: basic            # none | basic | token
+  username: admin
+  password: admin123

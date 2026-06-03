@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flutter/material.dart';
 
-import 'const.dart' show profileIconAsset;
+import 'const.dart' show focusHeroAsset;
 
 class FocusModePage extends StatefulWidget {
   const FocusModePage({super.key});
@@ -50,7 +50,7 @@ class _FocusModePageState extends State<FocusModePage> {
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
                 Image.asset(
-                  profileIconAsset,
+                  focusHeroAsset,
                   width: double.infinity,
                   height: 300,
                   fit: BoxFit.cover,

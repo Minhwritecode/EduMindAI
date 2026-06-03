@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 
-import 'const.dart' show profileIconAsset;
+import 'const.dart' show loginHeroAsset;
 import 'home_page_visual.dart';
 import 'services/user_data_sync.dart';
 import 'state/notebook_context_state.dart';
@@ -96,7 +96,7 @@ class _LoginPageState extends State<LoginPage> {
             children: <Widget>[
               const SizedBox(height: 50),
               Image.asset(
-                profileIconAsset,
+                loginHeroAsset,
                 width: double.infinity,
                 height: 300,
                 fit: BoxFit.cover,

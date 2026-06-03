@@ -36,5 +36,23 @@ const String defaultUserId = String.fromEnvironment(
   defaultValue: 'local',
 );
 
-/// Local placeholder image (no network required on macOS/desktop).
-const String profileIconAsset = 'lib/assets/profile_icon.jpg';
+/// Drawer / result circle avatar (AI mascot, not stock photo).
+const String learnerAvatarAsset = 'lib/assets/learner_avatar.png';
+
+/// Splash / app entry hero (AI-generated edu illustration).
+const String splashHeroAsset = 'lib/assets/learning_hero.png';
+
+/// Login screen top banner hero.
+const String loginHeroAsset = 'lib/assets/login_hero.png';
+
+/// Sign-up top banner (same layout as login).
+const String signupHeroAsset = loginHeroAsset;
+
+/// Focus mode top banner.
+const String focusHeroAsset = 'lib/assets/focus_hero.png';
+
+/// Learning-style quiz & result full-screen background.
+const String learningStyleBgAsset = splashHeroAsset;
+
+/// AI tutor chat background (subtle, readable behind messages).
+const String aiTutorBgAsset = 'lib/assets/ai_tutor_bg.png';

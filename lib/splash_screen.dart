@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
-import 'login_page.dart'; // Ensure this import points to your home page file
+import 'const.dart' show splashHeroAsset;
+import 'login_page.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -49,7 +50,7 @@ class _SplashScreenState extends State<SplashScreen> {
             ),
             const SizedBox(height: 20),
             Image.asset(
-              'lib/assets/profile_icon.jpg',
+              splashHeroAsset,
               width: 200,
               height: 200,
               fit: BoxFit.contain,
