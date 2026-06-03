@@ -1,0 +1,245 @@
+## 🏗️ MongoDB Collections Architecture
+
+To optimize performance and minimize database lookups, this design uses **4 core collections**. Related data (like quiz questions or flashcards) are **embedded** directly into their parent documents, while data that grows indefinitely (like chat history) or operates independently (like schedules) are kept in separate collections.
+
+---
+
+### 1. `users` Collection
+
+Stores core authentication and user profile data.
+
+```json
+{
+  "_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1a1"
+  },
+  "username": "studysmart",
+  "email": "user@example.com",
+  "password_hash": "$2b$10$YourSecureHashHere...",
+  "created_at": {
+    "$date": "2026-05-31T06:30:00Z"
+  }
+}
+
+```
+
+---
+
+### 2. `schedules` Collection (Timetable & Tasks)
+
+Houses the recurring weekly schedule structured by days of the week, alongside a flexible to-do list. Both slots and tasks link directly to `notebook_id`s for quick navigation in your UI.
+
+```json
+{
+  "_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1b2"
+  },
+  "user_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1a1"
+  },
+  "timetable": [
+    {
+      "day_of_week": "Monday",
+      "slots": [
+        {
+          "start_time": "08:00",
+          "end_time": "09:30",
+          "subject": "Distributed Systems",
+          "room_or_link": "Room 402 / Zoom",
+          "notebook_id": {
+            "$oid": "603d21b8f1d2b827e4b2a1c3"
+          }
+        },
+        {
+          "start_time": "14:00",
+          "end_time": "15:30",
+          "subject": "AI & Deep Learning",
+          "room_or_link": "Library",
+          "notebook_id": {
+            "$oid": "603d21b8f1d2b827e4b2a1c4"
+          }
+        }
+      ]
+    },
+    {
+      "day_of_week": "Wednesday",
+      "slots": [
+        {
+          "start_time": "10:00",
+          "end_time": "11:30",
+          "subject": "Database Architectures",
+          "room_or_link": "Room 201",
+          "notebook_id": {
+            "$oid": "603d21b8f1d2b827e4b2a1c3"
+          }
+        }
+      ]
+    }
+  ],
+  "todo_list": [
+    {
+      "task_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1b9"
+      },
+      "title": "Review AI-generated Flashcards",
+      "due_date": {
+        "$date": "2026-06-02T23:59:00Z"
+      },
+      "is_completed": false,
+      "notebook_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1c3"
+      }
+    }
+  ]
+}
+
+```
+
+---
+
+### 3. `notebooks` Collection (The Artifact Hub)
+
+The core component of your app. It holds the document text (`sources`) that the AI reads, and wraps all generated mindmaps, quizzes, and flashcards inside arrays. Fetching a notebook loads everything a user needs instantly.
+
+```json
+{
+  "_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1c3"
+  },
+  "user_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1a1"
+  },
+  "title": "Network Programming & AI Notes",
+  "description": "Workspace for syncing AI note-taking tools and system designs.",
+  "created_at": {
+    "$date": "2026-05-31T06:40:00Z"
+  },
+  "updated_at": {
+    "$date": "2026-05-31T06:40:00Z"
+  },
+  "sources": [
+    {
+      "source_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1d1"
+      },
+      "title": "PostgreSQL_vs_MongoDB_Guide.pdf",
+      "source_type": "pdf",
+      "content": "Full extracted text content used by the AI goes here...",
+      "file_url": "https://storage.googleapis.com/bucket/guide.pdf"
+    }
+  ],
+  "mindmaps": [
+    {
+      "mindmap_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1e1"
+      },
+      "title": "Database Architecture Map",
+      "graph_data": {
+        "nodes": [
+          {
+            "id": "1",
+            "type": "input",
+            "data": {
+              "label": "Database"
+            },
+            "position": {
+              "x": 250,
+              "y": 5
+            }
+          },
+          {
+            "id": "2",
+            "data": {
+              "label": "NoSQL (MongoDB)"
+            },
+            "position": {
+              "x": 100,
+              "y": 100
+            }
+          }
+        ],
+        "edges": [
+          {
+            "id": "e1-2",
+            "source": "1",
+            "target": "2"
+          }
+        ]
+      }
+    }
+  ],
+  "quizzes": [
+    {
+      "quiz_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1f1"
+      },
+      "title": "MongoDB Document Design Basics",
+      "questions": [
+        {
+          "question_text": "What is the maximum BSON document size in MongoDB?",
+          "options": [
+            "4MB",
+            "8MB",
+            "16MB",
+            "32MB"
+          ],
+          "correct_answer": "16MB"
+        }
+      ]
+    }
+  ],
+  "flashcards": [
+    {
+      "deck_id": {
+        "$oid": "603d21b8f1d2b827e4b2a1g1"
+      },
+      "title": "Mongoose Commands",
+      "cards": [
+        {
+          "front": "How to handle cascading deletes?",
+          "back": "Use pre-remove middleware in Mongoose."
+        },
+        {
+          "front": "What does .populate() do?",
+          "back": "Replaces specified paths in the document with documents from other collections."
+        }
+      ]
+    }
+  ]
+}
+
+```
+
+---
+
+### 4. `chat_histories` Collection
+
+Isolated in its own collection with a 1-to-1 link back to the notebook. This guarantees that long conversations won't bloat the notebook document or risk exceeding MongoDB's 16MB document size limit.
+
+```json
+{
+  "_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1h4"
+  },
+  "notebook_id": {
+    "$oid": "603d21b8f1d2b827e4b2a1c3"
+  },
+  "messages": [
+    {
+      "sender": "user",
+      "message_text": "Can you explain why we use embedded documents in MongoDB?",
+      "timestamp": {
+        "$date": "2026-05-31T06:45:00Z"
+      }
+    },
+    {
+      "sender": "ai",
+      "message_text": "Embedded documents allow you to fetch all related data in a single read operation, avoiding costly server-side joins!",
+      "timestamp": {
+        "$date": "2026-05-31T06:45:05Z"
+      }
+    }
+  ]
+}
+
+```

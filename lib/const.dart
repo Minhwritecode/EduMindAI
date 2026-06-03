@@ -31,6 +31,12 @@ const String apiBaseUrl = String.fromEnvironment(
   defaultValue: 'http://127.0.0.1:5000',
 );
 
+/// FastAPI + MongoDB + Chat API (see `server/main.py`). Android emulator: `http://10.0.2.2:8000`
+const String fastApiBaseUrl = String.fromEnvironment(
+  'FASTAPI_BASE_URL',
+  defaultValue: 'http://127.0.0.1:8000',
+);
+
 const String defaultUserId = String.fromEnvironment(
   'APP_USER_ID',
   defaultValue: 'local',

@@ -3,7 +3,6 @@ import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:flutter_gemini/flutter_gemini.dart';
 import 'package:provider/provider.dart';
 import 'package:smart_learning_application/const.dart' show defaultUserId, effectiveGeminiApiKey, geminiApiKeyFromDotenv;
-import 'package:smart_learning_application/theme/app_theme.dart';
 import 'package:smart_learning_application/splash_screen.dart';
 import 'learning_style_page.dart';
 import 'login_page.dart';
@@ -12,12 +11,18 @@ import 'state/notebook_context_state.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await dotenv.load(fileName: '.env');
-  geminiApiKeyFromDotenv = dotenv.env['GEMINI_API_KEY'] ?? '';
-  final apiKey = effectiveGeminiApiKey;
-  if (apiKey.isNotEmpty) {
-    Gemini.init(apiKey: apiKey);
+  
+  try {
+    await dotenv.load(fileName: ".env");
+    geminiApiKeyFromDotenv = dotenv.env['GEMINI_API_KEY'] ?? '';
+    final apiKey = effectiveGeminiApiKey;
+    if (apiKey.isNotEmpty) {
+      Gemini.init(apiKey: apiKey);
+    }
+  } catch (e) {
+    print('Error loading .env file: $e');
   }
+
   runApp(
     ChangeNotifierProvider(
       create: (_) => NotebookContextState()..userId = defaultUserId,
@@ -33,11 +38,17 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       title: 'PMDEduMind',
-    theme: AppTheme.lightTheme,
-    darkTheme: AppTheme.darkTheme,
-    themeMode: ThemeMode.system,
+      theme: ThemeData.dark().copyWith(
+        scaffoldBackgroundColor: const Color(0xFF131314),
+        colorScheme: const ColorScheme.dark(
+          primary: Color(0xFF48A9A6),
+          secondary: Color(0xFFFF8C42),
+          surface: Color(0xFF1E1F22),
+          onSurface: Color(0xFFE3E3E3),
+        ),
+      ),
       home: const SplashScreen(),
-      debugShowCheckedModeBanner: false,// Set LoginPage as the initial page
+      debugShowCheckedModeBanner: false,
       routes: {
         '/login': (context) => const LoginPage(),
         '/signup': (context) => const SignUpPage(),

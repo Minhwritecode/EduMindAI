@@ -1,196 +1,134 @@
-# PMDEduMind
+# PMDEduMind (EduMindAI)
 
-Ứng dụng học tập trên **Flutter**, kết hợp **Google Gemini** (gia sư, công cụ theo ngữ cảnh), **Python Flask** (dự đoán phong cách học VARK bằng Random Forest), và tùy chọn **MongoDB** để lưu ghi chú workspace.
+EduMindAI is a smart, context-grounded learning ecosystem built with **Flutter** (Frontend), and a hybrid Python backend structure containing both **FastAPI** (for authentication, chat, and notebook management) and **Flask** (for the AI/ML Recommendation Engine, VARK Classifier, and Admin Panel).
 
-**Mã nguồn:** [github.com/Minhwritecode/EduMindAI](https://github.com/Minhwritecode/EduMindAI)
-
----
-
-## PMDEduMind làm gì
-
-- **Dashboard:** ô **Notebook** — dán tài liệu, outline, câu hỏi; mọi công cụ AI bên dưới đọc nội dung này làm ngữ cảnh.
-- **Workspace:** Mindmap, Pomodoro, Quiz, Flashcard, Slide Desk, Report — sinh nội dung phù hợp với Notebook (Gemini).
-- **Phân tích lịch:** nhập lịch bận/rảnh và mục tiêu học → gợi ý khung giờ cụ thể (Gemini).
-- **Quiz phong cách học (VARK):** 10 câu hỏi → Flask `predictLearningStyle` (Random Forest, dữ liệu `learning_styles.csv`).
-- **AI Tutor:** chat với Gemini.
-- **Focus Mode & Pomodoro:** đếm thời gian tập trung.
-- **Gợi ý nội dung:** danh sách môn / video mẫu trên dashboard (có thể mở rộng thành gợi ý thông minh sau).
+**Repository:** [github.com/Minhwritecode/EduMindAI](https://github.com/Minhwritecode/EduMindAI)
 
 ---
 
-🚀 Tổng quan
-EduAI thích ứng với sở thích học tập của người dùng và tối ưu hóa trải nghiệm học tập của họ bằng cách sử dụng:
+## Features
 
-Dự đoán phong cách học tập dựa trên học máy
-Giải quyết nghi ngờ bằng trí tuệ nhân tạo với GPT-2
-Đề xuất khóa học và tài liệu học tập cá nhân hóa
-Chế độ tập trung để theo dõi thời gian và phân tích năng suất.
-
-🔬 Mô hình học máy ứng dụng
-
-✅ 1. Công cụ dự đoán phong cách học tập
-Mô hình được sử dụng: Bộ phân loại Rừng ngẫu nhiên
-Mục tiêu: Phân loại người dùng vào một trong bốn phong cách học tập: Trực quan, Thính giác, Đọc/Viết, Vận động (VARK) .
-Bộ dữ liệu: Bộ dữ liệu phản hồi của người dùng với các mẫu hành vi học tập.
-Kết quả: Đạt độ chính xác 95% trong phân loại phong cách học tập.
-
-✅ 2. Hệ thống đề xuất thông minh
-Mô hình được sử dụng: Mô hình lai (TF-IDF, SVD, Mạng thần kinh)
-Mục tiêu: Đề xuất các khóa học và tài liệu học tập dựa trên:
-Sở thích môn học
-Mức độ khó
-Tương tác trong quá khứ
-Cách thức triển khai: Kết hợp lọc dựa trên nội dung và lọc cộng tác .
-
-✅ 3. Trợ giảng AI (Giải đáp thắc mắc)
-Mô hình được sử dụng: GPT-2 đã được tinh chỉnh (PyTorch)
-Mục tiêu: Cung cấp giải đáp thắc mắc tức thì, giải thích và hỗ trợ học tập tương tác .
-Dữ liệu huấn luyện: Bộ dữ liệu SQuAD v2 để tinh chỉnh Q&A.
-Triển khai:
-Tiền xử lý: Mã hóa bằng bộ mã hóa GPT-2.
-Tinh chỉnh: Huấn luyện dựa trên PyTorch trên Google Colab .
-Suy luận: Được triển khai dưới dạng API chatbot.
-Kết quả: Tạo ra các câu trả lời phù hợp với ngữ cảnh .
-
-✅ 4. Chế độ tập trung & Công cụ theo dõi năng suất
-Mô hình được sử dụng: Hồi quy Logistic và Phân tích chuỗi thời gian
-Mục tiêu: Giúp người dùng theo dõi thời gian học tập tập trung và phân tích xu hướng năng suất .
-Triển khai:
-Theo dõi thời gian với dữ liệu phiên người dùng
-Dự đoán thời gian học tập tối ưu
-Phân tích các mô hình tiêu điểm
-
----
-## Công nghệ
-
-| Lớp | Công nghệ |
-|-----|-----------|
-| App | Flutter (Dart), `provider`, `http`, `flutter_gemini` |
-| Backend | Flask, pandas, scikit-learn, pymongo, certifi, flask-cors |
-| AI trong app | Google Gemini API |
-| ML trên server | Random Forest — phân loại VARK |
-| Lưu trữ tùy chọn | MongoDB Atlas (`pm_edu_mind`): `users`, `quiz_results`, `user_tasks`, `notebook_contexts` — qua Flask, app không nhúng URI |
+- **Smart Personalized Dashboard:** A centralized, aesthetically-pleasing dark theme dashboard featuring a live clock, dynamic motivational quotes, daily schedule, to-do list, and **personalized course recommendations** powered by a trained Hybrid Recommendation model.
+- **My Learning (Notebooks):** A persistent workspace to store your notes and documents, synced with MongoDB.
+- **AI Study Asset Generation:** Inside any notebook, generate context-grounded Mindmaps, Quizzes, Flashcards, and reports using Gemini.
+- **My Schedule:** A visual timetable grid to manage your weekly classes and activities using an intuitive "Tiết" (Period) system.
+- **To-Do List:** Track your upcoming tasks, check off completed ones, and link them to notebooks.
+- **Focus Mode & Pomodoro:** A built-in focus timer on the Dashboard to help you concentrate.
+- **Learning Style Assessment (VARK):** Assess your style (Visual, Auditory, Reading/Writing, Kinesthetic) to personalize recommendations.
 
 ---
 
-## Hướng dẫn chạy toàn bộ dự án
+## Tech Stack (Hybrid Coexistence Architecture)
 
-Dự án gồm 3 phần chính cần chạy: **Huấn luyện mô hình AI (VARK)**, **Flask Backend**, và **Flutter Frontend (Client)**. Dưới đây là hướng dẫn thiết lập và chạy chi tiết.
+| Layer | Component | Technologies | Port / Configuration |
+|-------|-----------|--------------|----------------------|
+| **Frontend** | Flutter Client | Flutter (Dart), `provider`, `http`, `flutter_gemini`, `flutter_dotenv` | Runs locally, connects to Ports 5000 & 8000 |
+| **Backend 1** | FastAPI Server | Python, FastAPI, MongoDB (Motor), Gemini API, Uvicorn | Runs on **Port 8000** (Auth, Chat, Notebooks, Schedule) |
+| **Backend 2** | Flask Server | Python, Flask, SQLite, Pandas, Scikit-learn, LightFM | Runs on **Port 5000** (VARK classifier, Hybrid Recommender, Admin Panel) |
+| **Databases**| Storage Layer | MongoDB Atlas (FastAPI) & Indexed SQLite DB (Flask Recommender) | `pm_edu_mind` & `data/recommendations.db` |
 
-### 1. Thiết lập biến môi trường (.env)
-Tạo tệp `.env` ở thư mục gốc của dự án (cùng cấp với `pubspec.yaml`):
-```bash
-cp .env.example .env
+---
+
+## Setup Instructions
+
+### 1. Prerequisites
+- **Flutter SDK** installed (for running the app).
+- **Python 3.9+** installed (with `python3 -m venv` support).
+- A **MongoDB Atlas** cluster URI.
+- A **Google Gemini API Key** (from Google AI Studio).
+
+### 2. Environment Variables (.env)
+Create a `.env` file in the root project directory (`EduMindAI/.env`):
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+API_BASE_URL=http://127.0.0.1:5000
+FASTAPI_BASE_URL=http://127.0.0.1:8000
 ```
-Mở file `.env` vừa tạo và điền các khóa cần thiết:
-- `GEMINI_API_KEY`: Khóa API của Google Gemini (lấy từ Google AI Studio).
-- `MONGO_URI`: (Tùy chọn) Chuỗi kết nối MongoDB Atlas nếu bạn muốn lưu trữ dữ liệu trên đám mây. Nếu không điền, hệ thống sẽ tự động chuyển sang cơ sở dữ liệu SQLite cục bộ (`local_db.sqlite`).
+*(Note: If you run on Android Emulator, use `http://10.0.2.2:5000` and `http://10.0.2.2:8000`)*
+
+For the FastAPI server, create a `.env` inside the `server/` folder:
+```env
+MONGO_URI=mongodb+srv://<username>:<password>@cluster.mongodb.net/pm_edu_mind
+GEMINI_API_KEY=your_gemini_api_key_here
+```
 
 ---
 
-### 2. Thiết lập và chạy Backend & AI Model (Python)
+### 3. Backend Setup & AI Model Training (Python)
 
-#### Bước 2.1: Tạo môi trường ảo và cài đặt thư viện phụ thuộc
+#### Step 3.1: Create Virtual Environment and Install Dependencies
+In the root directory, set up your Python virtual environment:
 ```bash
 python3 -m venv .venv
-source .venv/bin/activate   # Trên Windows chạy: .venv\Scripts\activate
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
 pip install -r requirements.txt
 pip install pyyaml joblib cython
 ```
-*Lưu ý cho macOS hoặc khi gặp xung đột NumPy:*
-Nếu gặp lỗi NumPy 2.x hoặc thiếu thư viện bổ trợ cho Transformers Trainer, hãy cài đặt các phiên bản tương thích sau:
-```bash
-pip install torch==2.2.1 transformers==4.44.2 "numpy<2" accelerate
-```
 
-#### Bước 2.2: Huấn luyện mô hình học tập VARK (PyTorch)
-Trước khi chạy backend lần đầu, bạn cần huấn luyện mô hình phân loại phong cách học tập VARK bằng cách chạy script sau:
+#### Step 3.2: Train the VARK classifier
+Train the VARK learning style classifier:
 ```bash
 python scripts/train_vark_model.py --epochs 2
 ```
-Sau khi hoàn tất, mô hình `learning_style_model.pt` và các cấu hình tokenizer sẽ được lưu ở thư mục gốc để Flask backend load khi khởi động.
+This saves `learning_style_model.pt` in the project root.
 
-#### Bước 2.3: Di chuyển dữ liệu sang SQLite & Huấn luyện mô hình gợi ý Hybrid
-Để khởi chạy hệ thống gợi ý khóa học thông minh sử dụng thuật toán Hợp tác lọc lai (Hybrid Collaborative Filtering):
-1. **Di chuyển dữ liệu CSV sang SQLite DB (có đánh chỉ mục tối ưu)**:
+#### Step 3.3: Database Migration & Recommendation Model Training
+1. **Migrate CSV data to SQLite** (for the collaborative/hybrid recommendation system):
    ```bash
    python scripts/migrate_csv_to_sqlite.py
    ```
-2. **Huấn luyện mô hình Hybrid Recommender**:
+2. **Train the Hybrid Recommender model**:
    ```bash
    python scripts/train_lightfm.py
    ```
-Các file cơ sở dữ liệu `data/recommendations.db` và tệp tin mô hình đã huấn luyện `data/model/lightfm.pkl` sẽ được tạo và nạp tự động bởi Flask backend.
+This generates the database `data/recommendations.db` and the model `data/model/lightfm.pkl`.
 
-#### Bước 2.4: Khởi động Flask Backend & Trang Quản trị Đề xuất
-Chạy server backend trên cổng mặc định `5000`:
-```bash
-python app.py
-```
-Server sẽ khởi chạy tại địa chỉ `http://127.0.0.1:5000`.
+#### Step 3.4: Running both Servers
+Keep both terminals open:
+- **Terminal 1: Start FastAPI Backend (Port 8000)**
+  ```bash
+  source .venv/bin/activate
+  uvicorn server.main:app --port 8000 --reload
+  ```
+- **Terminal 2: Start Flask Recommender & Admin Backend (Port 5000)**
+  ```bash
+  source .venv/bin/activate
+  python app.py
+  ```
 
-* **Trang quản trị đề xuất trực quan (Admin Dashboard Panel)**:
-  Truy cập địa chỉ: [http://127.0.0.1:5000/admin/recommendations](http://127.0.0.1:5000/admin/recommendations)
-  - Đăng nhập Basic Auth bằng tài khoản mặc định: **username**: `admin` / **password**: `admin123` (Cấu hình này có thể thay đổi trong tệp `data/recommendation_config.yaml`).
-  - Giao diện cung cấp khả năng điều chỉnh trọng số đề xuất trực quan bằng thanh trượt, re-train mô hình ngay trên web và xem live logs.
+#### Step 3.5: Access the Recommendation Admin Panel
+Go to [http://127.0.0.1:5000/admin/recommendations](http://127.0.0.1:5000/admin/recommendations):
+- Login: **username**: `admin` / **password**: `admin123` (configured in `data/recommendation_config.yaml`).
+- Features: Adjust recommendation weights live, trigger on-demand model retraining, and view system logs.
 
-#### Bước 2.5: Chạy các kiểm thử (Unit tests) của Backend
-Bạn có thể chạy các tệp tin test sử dụng `pytest`:
+#### Step 3.6: Run Tests
+To run unit and integration tests:
 ```bash
 PYTHONPATH=. pytest
 ```
 
 ---
 
-### 3. Thiết lập và chạy Frontend (Flutter Client)
+### 4. Frontend Setup & Run (Flutter)
 
-#### Bước 3.1: Tải các gói thư viện phụ thuộc của Flutter
-```bash
-flutter pub get
-```
-
-#### Bước 3.2: Chạy ứng dụng Flutter
-Khởi chạy ứng dụng bằng lệnh:
-```bash
-flutter run \
-  --dart-define=API_BASE_URL=http://127.0.0.1:5000 \
-  --dart-define=APP_USER_ID=local
-```
-- **Android Emulator**: Nếu chạy ứng dụng trên máy ảo Android, hãy cấu hình API trỏ về IP loopback của máy chủ host: `--dart-define=API_BASE_URL=http://10.0.2.2:5000`.
-- **Chạy kiểm thử (Unit tests)**: `flutter test`
+1. Fetch dependencies:
+   ```bash
+   flutter pub get
+   ```
+2. Run the application:
+   ```bash
+   flutter run
+   ```
+   *(We recommend running on Desktop/Web to experience the full-width side-by-side dashboard layout.)*
 
 ---
 
-## Cấu trúc thư mục (Dart)
-
-| Đường dẫn | Vai trò |
-|-----------|---------|
-| `lib/main.dart` | Nạp `.env` (`flutter_dotenv`), khởi tạo Gemini (nếu có key) |
-| `lib/const.dart` | `API_BASE_URL`, `APP_USER_ID`; Gemini: `.env` + `--dart-define` (dart-define ưu tiên) |
-| `lib/home_page_visual.dart` | Dashboard, Notebook, chip công cụ |
-| `lib/notebook_tool_screens.dart` | Mindmap, Quiz notebook, Flashcard, …, Pomodoro |
-| `lib/schedule_analyze_page.dart` | Phân tích lịch học |
-| `lib/learning_style_page.dart` | Quiz VARK → HTTP Flask |
-| `lib/services/notebook_mongo_sync.dart` | Gọi API notebook |
-| `lib/services/user_data_sync.dart` | Hồ sơ, quiz VARK, tasks → API Mongo |
-| `lib/state/notebook_context_state.dart` | State ngữ cảnh Notebook |
+## Security Notes
+- Do not commit your `.env` files.
+- Ensure your MongoDB network access allows connections from your current IP or `0.0.0.0/0`.
+- All model weights, SQLite paths, and pagination settings can be customized in `data/recommendation_config.yaml`.
 
 ---
 
-## Bảo mật
-
-- Không commit **`.env`**, **API key Gemini**, hay chuỗi **MongoDB** vào Git.
-- Nếu `MONGO_URI` hoặc PAT GitHub từng lộ: đổi mật khẩu user DB / thu hồi token trên GitHub.
-
----
-
-## Ghi chú sản phẩm
-
-- Màn **đăng nhập** gửi hồ sơ lên `/api/user-profile`, đặt `userId` trong app (email chữ thường nếu có, không thì slug từ tên), rồi vào Dashboard.
-- **Quiz trong Notebook** (sinh câu hỏi từ nội dung bạn dán) khác **quiz VARK** (gọi Flask); hai luồng độc lập.
-
----
-
-## Tác giả / Authors
-
+## Authors / Copyright
 **Copyright (c) 2026 Đinh Trần Tiến Minh | Phan Thanh Phúc | Hoàng Văn Đức**
