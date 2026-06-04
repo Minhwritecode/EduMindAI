@@ -388,7 +388,7 @@ class _DashboardViewState extends State<DashboardView> {
 
   Future<void> _importNotebookFromFile() async {
     try {
-      final result = await FilePicker.platform.pickFiles(
+      final result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['txt', 'md'],
       );

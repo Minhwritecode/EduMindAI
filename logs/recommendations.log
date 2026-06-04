@@ -1,0 +1,43 @@
+2026-06-04 11:56:57,161 [INFO] Recommendation system logging initialized.
+2026-06-04 11:56:57,163 [INFO] Hybrid recommender model and index maps loaded successfully.
+2026-06-04 11:56:57,174 [INFO] [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on http://127.0.0.1:5000
+2026-06-04 11:56:57,174 [INFO] [33mPress CTRL+C to quit[0m
+2026-06-04 11:56:57,185 [INFO]  * Restarting with stat
+2026-06-04 11:56:58,819 [INFO] Recommendation system logging initialized.
+2026-06-04 11:56:58,821 [INFO] Hybrid recommender model and index maps loaded successfully.
+2026-06-04 11:56:58,825 [WARNING]  * Debugger is active!
+2026-06-04 11:56:58,851 [INFO]  * Debugger PIN: 615-678-815
+2026-06-04 11:58:40,926 [INFO] 127.0.0.1 - - [04/Jun/2026 11:58:40] "[33mGET /api/notebooks//chat HTTP/1.1[0m" 404 -
+2026-06-04 11:59:49,730 [INFO] Computing recommendations for user_id=local_mock_id (cache miss).
+2026-06-04 11:59:49,775 [ERROR] Error computing model predictions: invalid literal for int() with base 10: 'local_mock_id'
+2026-06-04 11:59:49,776 [INFO] Served 5 recommendations for user_id=local_mock_id (offset=0, limit=5, total=100)
+2026-06-04 11:59:49,776 [INFO] 127.0.0.1 - - [04/Jun/2026 11:59:49] "GET /api/recommendations?userId=local_mock_id HTTP/1.1" 200 -
+2026-06-04 12:00:52,088 [INFO] Served 5 recommendations for user_id=local_mock_id (offset=0, limit=5, total=100)
+2026-06-04 12:00:52,089 [INFO] 127.0.0.1 - - [04/Jun/2026 12:00:52] "GET /api/recommendations?userId=local_mock_id HTTP/1.1" 200 -
+2026-06-04 12:01:28,660 [INFO] Served 5 recommendations for user_id=local_mock_id (offset=0, limit=5, total=100)
+2026-06-04 12:01:28,661 [INFO] 127.0.0.1 - - [04/Jun/2026 12:01:28] "GET /api/recommendations?userId=local_mock_id HTTP/1.1" 200 -
+2026-06-04 12:01:59,761 [INFO] Served 5 recommendations for user_id=local_mock_id (offset=0, limit=5, total=100)
+2026-06-04 12:01:59,762 [INFO] 127.0.0.1 - - [04/Jun/2026 12:01:59] "GET /api/recommendations?userId=local_mock_id HTTP/1.1" 200 -
+2026-06-04 12:04:23,131 [INFO] Computing recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (cache miss).
+2026-06-04 12:04:23,175 [ERROR] Error computing model predictions: invalid literal for int() with base 10: 'f3761f13-3897-4ab9-97ba-68aba864a1b3'
+2026-06-04 12:04:23,175 [INFO] Served 5 recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (offset=0, limit=5, total=100)
+2026-06-04 12:04:23,176 [INFO] 127.0.0.1 - - [04/Jun/2026 12:04:23] "GET /api/recommendations?userId=f3761f13-3897-4ab9-97ba-68aba864a1b3 HTTP/1.1" 200 -
+2026-06-04 12:04:47,136 [INFO] 127.0.0.1 - - [04/Jun/2026 12:04:47] "[33mGET /api/notebooks//chat HTTP/1.1[0m" 404 -
+2026-06-04 12:08:30,959 [INFO] Served 5 recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (offset=0, limit=5, total=100)
+2026-06-04 12:08:30,960 [INFO] 127.0.0.1 - - [04/Jun/2026 12:08:30] "GET /api/recommendations?userId=f3761f13-3897-4ab9-97ba-68aba864a1b3 HTTP/1.1" 200 -
+2026-06-04 12:08:47,432 [INFO] Served 5 recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (offset=0, limit=5, total=100)
+2026-06-04 12:08:47,432 [INFO] 127.0.0.1 - - [04/Jun/2026 12:08:47] "GET /api/recommendations?userId=f3761f13-3897-4ab9-97ba-68aba864a1b3 HTTP/1.1" 200 -
+2026-06-04 12:08:51,535 [INFO] 127.0.0.1 - - [04/Jun/2026 12:08:51] "[33mGET /api/notebooks/f7fbc287-2aa6-49da-8e7b-eb7f26e081ac/chat HTTP/1.1[0m" 404 -
+2026-06-04 12:08:53,995 [INFO] Served 5 recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (offset=0, limit=5, total=100)
+2026-06-04 12:08:53,995 [INFO] 127.0.0.1 - - [04/Jun/2026 12:08:53] "GET /api/recommendations?userId=f3761f13-3897-4ab9-97ba-68aba864a1b3 HTTP/1.1" 200 -
+2026-06-04 12:09:25,677 [INFO] 127.0.0.1 - - [04/Jun/2026 12:09:25] "OPTIONS /api/predictLearningStyleFromText HTTP/1.1" 200 -
+2026-06-04 12:09:25,686 [INFO] 127.0.0.1 - - [04/Jun/2026 12:09:25] "POST /api/predictLearningStyleFromText HTTP/1.1" 200 -
+2026-06-04 12:09:25,718 [INFO] 127.0.0.1 - - [04/Jun/2026 12:09:25] "OPTIONS /api/quiz-results HTTP/1.1" 200 -
+2026-06-04 12:09:25,769 [INFO] 127.0.0.1 - - [04/Jun/2026 12:09:25] "POST /api/quiz-results HTTP/1.1" 200 -
+2026-06-04 12:09:29,488 [INFO] Computing recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (cache miss).
+2026-06-04 12:09:29,532 [ERROR] Error computing model predictions: invalid literal for int() with base 10: 'f3761f13-3897-4ab9-97ba-68aba864a1b3'
+2026-06-04 12:09:29,532 [INFO] Served 5 recommendations for user_id=f3761f13-3897-4ab9-97ba-68aba864a1b3 (offset=0, limit=5, total=100)
+2026-06-04 12:09:29,532 [INFO] 127.0.0.1 - - [04/Jun/2026 12:09:29] "GET /api/recommendations?userId=f3761f13-3897-4ab9-97ba-68aba864a1b3 HTTP/1.1" 200 -
+2026-06-04 12:15:04,414 [INFO]  * Detected change in '/home/slay/EduMindAI/app.py', reloading
+2026-06-04 12:15:05,269 [INFO]  * Restarting with stat
